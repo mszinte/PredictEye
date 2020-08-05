@@ -1,0 +1,4 @@
+mghRead(/Users/martin/disks/meso_S/data/pRFseqTest/deriv_data/fmriprep/freeview/sub-01/mri/T1.mgz, -1): could not open file
+mghRead(/Users/martin/disks/meso_S/data/pRFseqTest/deriv_data/fmriprep/freeview/sub-01/mri/T1.mgz, -1): could not open file
+WARNING: 13303246 NaNs found in volume /Users/martin/disks/meso_S/data/pRFseqTest/pp_data/sub-01/func/sub-01_task-AttendStim_acq-2mm_fmriprep_sg_psc_avg.nii.gz...
+
