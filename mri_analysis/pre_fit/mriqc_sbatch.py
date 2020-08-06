@@ -22,6 +22,9 @@ To run:
 python mriqc_sbatch.py [main directory] [project name] [subject num] 
 					   [nb proc.] [hour proc.]
 -----------------------------------------------------------------------------------------
+Exemple:
+python mriqc_sbatch.py /scratch/mszinte/data PredictEye sub-01 32 5
+-----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
 """
@@ -59,6 +62,7 @@ slurm_cmd = """\
 #SBATCH -p {cluster_name}
 #SBATCH -A {proj_name}
 #SBATCH --nodes=1
+#SBATCH --mem=48gb
 #SBATCH --cpus-per-task={nb_procs}
 #SBATCH --time={job_dur}:00:00
 #SBATCH -e {log_dir}/{subject}_mriqc_%N_%j_%a.err

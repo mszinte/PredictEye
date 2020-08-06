@@ -18,14 +18,18 @@ Output(s):
 preprocessed files
 -----------------------------------------------------------------------------------------
 To run:
-cd /home/mszinte/projects/PredictEye/mri_analysis/
-python pre_fit/fmriprep_sbatch.py PredictEye sub-01 20 0 0 0 1
-python pre_fit/fmriprep_sbatch.py PredictEye sub-02 20 0 0 0 1
-python pre_fit/fmriprep_sbatch.py PredictEye sub-03 20 0 0 0 1
-python pre_fit/fmriprep_sbatch.py PredictEye sub-04 20 0 0 0 1
+1. cd to function
+>> cd /home/mszinte/projects/PredictEye/mri_analysis/pre_fit/
+2. run python command
+python mriqc_sbatch.py [main directory] [project name] [subject num] 
+					   [hour proc.] [anat only] [aroma] [fmapfree] [skip bids validation]
+-----------------------------------------------------------------------------------------
+Exemple:
+python pre_fit/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 1 0 0 0
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
+
 """
 
 # imports modules
@@ -39,42 +43,22 @@ opj = os.path.join
 deb = ipdb.set_trace
 
 # inputs
-project_dir = sys.argv[1]
-subject = sys.argv[2]
+main_dir = sys.argv[1]
+project_dir = sys.argv[2]
+subject = sys.argv[3]
 sub_num = subject[-2:]
-hour_proc = int(sys.argv[3])
-anat = int(sys.argv[4])
-aroma = int(sys.argv[5])
-fmapfree = int(sys.argv[6])
-skip_bids_val = int(sys.argv[7])
-
-# Analysis parameters
-with open('settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
+hour_proc = int(sys.argv[4])
+anat = int(sys.argv[5])
+aroma = int(sys.argv[6])
+fmapfree = int(sys.argv[7])
+skip_bids_val = int(sys.argv[8])
 
 # Define cluster/server specific parameters
-if cluster_name  == 'skylake':
-	base_dir = analysis_info['base_dir']
-	main_dir = '/scratch/mszinte/data/'
-	singularity_dir = '/scratch/mszinte/softwares/fmriprep-20.0.4.simg'
-	nb_procs = 32
-	memory_val = 48
-	proj_name = 'b161'
-	# os.system("rsync -az --no-g --no-p --progress {scratchw}/ {scratch}".format(
-	# 			scratch = analysis_info['base_dir'],
-	# 			scratchw  = analysis_info['base_dir_westmere']))
-
-elif cluster_name  == 'westmere':
-	base_dir = analysis_info['base_dir_westmere'] 
-	main_dir = '/scratchw/mszinte/data/'
-	singularity_dir = '/scratchw/mszinte/softwares/fmriprep-1.5.0.simg'
-	nb_procs = 12
-	memory_val = 24
-	proj_name = 'westmere'
-	# os.system("rsync -az --no-g --no-p --progress {scratch}/ {scratchw}".format(
-	# 			scratch = analysis_info['base_dir'],
-	# 			scratchw  = base_dir))
+cluster_name  = 'skylake'
+proj_name = 'b161'
+singularity_dir = '/scratch/mszinte/softwares/fmriprep-20.1.1.simg'
+nb_procs = 32
+memory_val = 48
 log_dir = opj(main_dir,project_dir,'deriv_data','fmriprep','log_outputs')
 
 # special input
@@ -108,7 +92,7 @@ slurm_cmd = """\
 											anat_only_end = anat_only_end, memory_val = memory_val, log_dir = log_dir)
 
 # define singularity cmd
-singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/freesurfer/license.txt /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/fmriprep/ participant --participant-label {sub_num} -w /work_dir/{project_dir}/temp_data/ --bold2t1w-dof 12 --output-spaces T1w fsaverage MNI152NLin2009cAsym --cifti-output --low-mem --mem-mb 32000 --nthreads {nb_procs:.0f}{anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
+singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/freesurfer/license.txt /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/fmriprep/ participant --participant-label {sub_num} -w /work_dir/{project_dir}/temp_data/ --bold2t1w-dof 12 --output-spaces T1w MNI152NLin2009cAsym --cifti-output --low-mem --mem-mb 32000 --nthreads {nb_procs:.0f}{anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
 									main_dir = main_dir,
 									project_dir = project_dir,
 									simg = singularity_dir,
@@ -133,6 +117,5 @@ of.close()
 
 # Submit jobs
 print("Submitting {sh_dir} to queue".format(sh_dir = sh_dir))
-os.chdir(log_dir)
-os.system("sbatch {sh_dir}".format(sh_dir = sh_dir))
-
+# os.chdir(log_dir)
+# os.system("sbatch {sh_dir}".format(sh_dir = sh_dir))

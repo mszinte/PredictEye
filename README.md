@@ -22,14 +22,4 @@ the ocumotor system.<br/>
 4. locEMexp:<br/>
 
 ## mri_analysis
-1. pRFexp: <br/>
-* run mriqc on mesocentre using mri_analysis/pre_fit/mriqc_srun.py or mriqc_sbatch<br/>
-
-2. pMFexp: <br/>
-* run mriqc on mesocentre using mri_analysis/pre_fit/mriqc_srun.py or mriqc_sbatch<br/>
-
-3. locEMexp: <br/>
-* run mriqc on mesocentre using mri_analysis/pre_fit/mriqc_srun.py or mriqc_sbatch<br/>
-
-4. RSexp: <br/>
 * run mriqc on mesocentre using mri_analysis/pre_fit/mriqc_srun.py or mriqc_sbatch<br/>
