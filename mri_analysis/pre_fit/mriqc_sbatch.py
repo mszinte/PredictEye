@@ -8,7 +8,7 @@ Run frmiqc on mesocentre using job mode
 Input(s):
 sys.argv[1]: main project directory
 sys.argv[2]: project name (correspond to directory)
-sys.argv[3]: bids subject num (e.g. 01)
+sys.argv[3]: bids subject num (e.g. 001)
 sys.argv[4]: server nb of processor to use (e.g 32)
 sys.argv[5]: server nb of hour to request (e.g 10)
 -----------------------------------------------------------------------------------------
@@ -17,10 +17,10 @@ QC html files
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd /scratch/mszinte/projects/pRFseqTest/mri_analysis/pre_fit/
+>> cd /home/mszinte/projects/PredictEye/mri_analysis/pre_fit/
 2. run python command
-python mriqc_sbatch.py [main directory] [project name] [subject num] [nb proc.] 
-					   [hour proc.]
+python mriqc_sbatch.py [main directory] [project name] [subject num] 
+					   [nb proc.] [hour proc.]
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -32,50 +32,57 @@ import os
 import time
 import ipdb
 opj = os.path.join
+deb = ipdb.set_trace
 
 # inputs
-singularity_dir = '/scratch/mszinte/softwares/mriqc-0.15.1.simg'
+singularity_dir = '/scratch/mszinte/softwares/mriqc-0.15.2.simg'
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
-sub_num = sys.argv[3]
+subject = sys.argv[3]
+sub_num = subject[-2:]
 nb_procs = int(sys.argv[4])
-hour_proc = int(sys.argv[5])
+job_dur = int(sys.argv[5])
+cluster_name = 'skylake'
+proj_name = 'b161'
 
-# define SLURM cmd
+# create sh folder and file
+jobs_dir = opj(main_dir,project_dir,'deriv_data','mriqc','jobs') 
+log_dir = opj(main_dir,project_dir,'deriv_data','mriqc','log_outputs')
+try:
+	os.makedirs(jobs_dir)
+	os.makedirs(log_dir)
+except:
+	pass
+
 slurm_cmd = """\
-#!/bin/sh
-#SBATCH -J sub-{sub_num}_mriqc
-#SBATCH -p skylake
-#SBATCH -N 1
-#SBATCH -t {hour_proc}:00:00
-#SBATCH --ntasks-per-node={nb_procs}
-#SBATCH -o %N.%j.%a.out
-#SBATCH -e %N.%j.%a.err
-#SBATCH --mail-type=BEGIN,END
-#SBATCH --mail-user=martin.szinte@gmail.com\n\n""".format(hour_proc = hour_proc, nb_procs = nb_procs, sub_num = sub_num)
+#!/bin/bash
+#SBATCH -p {cluster_name}
+#SBATCH -A {proj_name}
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task={nb_procs}
+#SBATCH --time={job_dur}:00:00
+#SBATCH -e {log_dir}/{subject}_mriqc_%N_%j_%a.err
+#SBATCH -o {log_dir}/{subject}_mriqc_%N_%j_%a.out
+#SBATCH -J {subject}_mriqc\n\n""".format(
+                    cluster_name = cluster_name,        proj_name = proj_name,
+                    nb_procs = nb_procs,                log_dir = log_dir,
+                    job_dur = job_dur,                  subject = subject)
+
 
 # define singularity cmd
-singularity_cmd = "singularity run --bind {main_dir}:/work_dir {simg} /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/mriqc/ participant --participant_label {sub_num} -w /work_dir/{project_dir}/temp_data/ --n_procs {nb_procs:.0f} --verbose-reports --mem_gb 64 -m bold T1w T2w --no-sub".format(
+singularity_cmd = "singularity run --bind {main_dir}:/work_dir {simg} /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/mriqc/ participant --participant_label {sub_num} -w /work_dir/{project_dir}/temp_data/ --verbose-reports --mem_gb 64 -m bold T1w T2w --no-sub".format(
 									main_dir = main_dir,
 									project_dir = project_dir,
 									simg = singularity_dir, 
 									sub_num = sub_num,
-									nb_procs = nb_procs,
 									)
 
-# create sh folder and file
 sh_dir = "{main_dir}/{project_dir}/deriv_data/mriqc/jobs/sub-{sub_num}_mriqc.sh".format(main_dir = main_dir, project_dir = project_dir, sub_num = sub_num)
-try:
-	os.makedirs(opj(main_dir,project_dir,'deriv_data','mriqc','jobs'))
-	os.makedirs(opj(main_dir,project_dir,'deriv_data','mriqc','log_outputs'))
-except:
-	pass
-
 of = open(sh_dir, 'w')
 of.write("{slurm_cmd}{singularity_cmd}".format(slurm_cmd = slurm_cmd,singularity_cmd = singularity_cmd))
 of.close()
 
 # Submit jobs
 print("Submitting {sh_dir} to queue".format(sh_dir = sh_dir))
-os.chdir(opj(main_dir,project_dir,'deriv_data','mriqc','log_outputs'))
+os.chdir(log_dir)
 os.system("sbatch {sh_dir}".format(sh_dir = sh_dir))
