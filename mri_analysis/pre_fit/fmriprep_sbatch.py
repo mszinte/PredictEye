@@ -6,23 +6,24 @@ Goal of the script:
 Run fMRIprep on mesocentre using job mode
 -----------------------------------------------------------------------------------------
 Input(s):
-sys.argv[1]: project name (correspond to directory)
-sys.argv[2]: subject (e.g. sub-001)
-sys.argv[3]: server nb of hour to request (e.g 10)
-sys.argv[4]: anat only (1) or not (0)
-sys.argv[5]: use of aroma (1) or not (0)
-sys.argv[6]: use Use fieldmap-free distortion correction
-sys.argv[7]: skip BIDS validation (1) or not (0)
+sys.argv[1]: main project directory
+sys.argv[2]: project name (correspond to directory)
+sys.argv[3]: subject (e.g. sub-001)
+sys.argv[4]: server nb of hour to request (e.g 10)
+sys.argv[5]: anat only (1) or not (0)
+sys.argv[6]: use of aroma (1) or not (0)
+sys.argv[7]: use Use fieldmap-free distortion correction
+sys.argv[8]: skip BIDS validation (1) or not (0)
 -----------------------------------------------------------------------------------------
 Output(s):
 preprocessed files
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd /home/mszinte/projects/PredictEye/mri_analysis/pre_fit/
+>> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
-python mriqc_sbatch.py [main directory] [project name] [subject num] 
-					   [hour proc.] [anat only] [aroma] [fmapfree] [skip bids validation]
+python pre_fit/mriqc_sbatch.py [main directory] [project name] [subject num] [hour proc.] 
+					           [anat only] [aroma] [fmapfree] [skip bids validation]
 -----------------------------------------------------------------------------------------
 Exemple:
 python pre_fit/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 1 0 0 0
@@ -117,5 +118,5 @@ of.close()
 
 # Submit jobs
 print("Submitting {sh_dir} to queue".format(sh_dir = sh_dir))
-# os.chdir(log_dir)
-# os.system("sbatch {sh_dir}".format(sh_dir = sh_dir))
+os.chdir(log_dir)
+os.system("sbatch {sh_dir}".format(sh_dir = sh_dir))

@@ -17,13 +17,13 @@ QC html files
 -----------------------------------------------------------------------------------------
 To run:
 1. cd to function
->> cd /home/mszinte/projects/PredictEye/mri_analysis/pre_fit/
+>> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
-python mriqc_sbatch.py [main directory] [project name] [subject num] 
-					   [nb proc.] [hour proc.]
+python pre_fit/mriqc_sbatch.py [main directory] [project name] [subject num] 
+					   		   [nb proc.] [hour proc.]
 -----------------------------------------------------------------------------------------
 Exemple:
-python mriqc_sbatch.py /scratch/mszinte/data PredictEye sub-01 32 5
+python pre_fit/mriqc_sbatch.py /scratch/mszinte/data PredictEye sub-01 32 5
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ opj = os.path.join
 deb = ipdb.set_trace
 
 # inputs
-singularity_dir = '/scratch/mszinte/softwares/mriqc-0.15.2.simg'
+singularity_dir = '/scratch/mszinte/softwares/mriqc-0.15.1.simg'
 main_dir = sys.argv[1]
 project_dir = sys.argv[2]
 subject = sys.argv[3]

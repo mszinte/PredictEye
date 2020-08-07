@@ -7,17 +7,23 @@ Make freeview sagital video of segmentation (to run before and after manual edit
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: subject
-sys.argv[2]: x slice start number (e.g. 0)
-sys.argv[3]: x slice end number (e.g. 255)
-sys.argv[4]: explanations ('before_edit', 'after_edit')
+
+sys.argv[2]: slice start number (e.g. 0)
+sys.argv[3]: slice end number (e.g. 255)
+sys.argv[4]: video name ('before_edit', 'after_edit')
 -----------------------------------------------------------------------------------------
 Output(s):
 preprocessed files
 -----------------------------------------------------------------------------------------
 To run:
-cd ~/disks/meso_H/projects/pRFgazeMod/mri_analysis/
-python pre_fit/freeview.py sub-001 45 195 before_edit
-python pre_fit/freeview.py sub-001 45 195 after_edit
+1. cd to function
+>> cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
+2. run python command
+python /pre_fit/freeview.py [main directory] [project name] [subject num] 
+                            [slice start] [slice end] [video name]
+-----------------------------------------------------------------------------------------
+Exemple:
+python pre_fit/freeview.py ~/disks/meso_S/data/ PredictEye sub-01 45 250 before_edit
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -34,20 +40,18 @@ import numpy as np
 deb = ipdb.set_trace
 
 # Inputs
-subject = sys.argv[1]
-x_start = int(sys.argv[2])
-x_end = int(sys.argv[3])
-expl = sys.argv[4]
 
-# Define analysis parameters
-with open('settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
+main_dir = sys.argv[1]
+project_dir = sys.argv[2]
+subject = sys.argv[3]
+x_start = int(sys.argv[4])
+x_end = int(sys.argv[5])
+expl = sys.argv[6]
+
 
 # define directory
-base_dir = analysis_info['base_dir_local']
-fs_dir = "{base_dir}/deriv_data/fmriprep/freesurfer/{subject}".format(base_dir = base_dir, subject = subject)
-bids_dir = "{base_dir}/bids_data/{subject}".format(base_dir = base_dir, subject = subject)
+fs_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/freesurfer/{subject}".format(main_dir = main_dir, project_dir = project_dir, subject = subject)
+bids_dir = "{main_dir}/{project_dir}/bids_data/{subject}".format(main_dir = main_dir, project_dir = project_dir, subject = subject)
 vid_dir = "{fs_dir}/vid/{expl}".format(fs_dir = fs_dir, expl = expl)
 image_dir = "{vid_dir}/img".format(vid_dir = vid_dir)
 sh_dir = "{vid_dir}/{subject}_{expl}.sh".format(vid_dir = vid_dir, subject = subject, expl = expl)
