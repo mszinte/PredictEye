@@ -27,6 +27,7 @@ python pre_fit/mriqc_sbatch.py [main directory] [project name] [subject num] [ho
 -----------------------------------------------------------------------------------------
 Exemple:
 python pre_fit/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 1 0 0 0
+python pre_fit/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 0 0 0 0
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------

@@ -23,7 +23,7 @@ python /pre_fit/freeview.py [main directory] [project name] [subject num]
                             [slice start] [slice end] [video name]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pre_fit/freeview.py ~/disks/meso_S/data/ PredictEye sub-01 45 250 before_edit
+python pre_fit/freeview.py ~/disks/meso_S/data/ PredictEye sub-01 50 250 before_edit
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------

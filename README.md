@@ -21,10 +21,8 @@ the ocumotor system.<br/>
 * run freesurfer-dev version to use t2w image for the pial surface using pre_fit/freesurfer_dev.py<br/>
 * make a "after_fs_dev" video of the fmriprep/freesurfer segmentation using mri_analysis/pre_fit/freeview.py<br>
 * manual edition of the pial surface using freeview launched with /pre_fit/pial_edits.py and following the rules of http://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEditsV6.0 <br/>
-* re-run freesurfer-dev version to use t2w image for the pial surface using pre_fit/freesurfer_dev.py<br/>
-
-
-* make a "after_manual" video of the fmriprep/freesurfer segmentation using mri_analysis/pre_fit/freeview.py<br>
+* re-run freesurfer to include the manual change of the pial surface using pre_fit/freesurfer_pial.py<br/>
+* make a "after_manual_edit" video of the fmriprep/freesurfer segmentation using mri_analysis/pre_fit/freeview.py<br>
 * run fmriprpep on mesocentre using mri_analysis/pre_fit/fmriprep_sbatch.py<br/>
 
 ## behav_analysis
