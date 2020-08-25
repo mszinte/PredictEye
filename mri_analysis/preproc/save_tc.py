@@ -81,7 +81,7 @@ volume_tc = cortex.Volume(data = tc.transpose((3,2,1,0)), subject = subject,xfmn
 print('save pycortex dataset: time course')
 dataset_tc = cortex.Dataset(data = volume_tc)
 dataset_tc.save("{dataset_dir}{tc_file_end}_tc.hdf".format(tc_file_end = tc_file_end,dataset_dir = dataset_dir))
-deb()
+
 # create webgl
 print('save pycortex webviewer: time course')
 cortex.webgl.make_static(outpath = webviewer_dir, data = volume_tc)

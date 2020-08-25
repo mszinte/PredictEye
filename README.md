@@ -17,19 +17,6 @@ the ocumotor system.<br/>
 ## MRI Analysis
 
 # pre-processing
-* run mriqc on mesocentre using mri_analysis/preproc/mriqc_sbatch<br/>
-* run fmriprpep with anat-only option on mesocentre using mri_analysis/preproc/fmriprep_sbatch.py<br/>
-* make a "before_edit" video of the fmriprep/freesurfer segmentation using mri_analysis/preproc/freeview.py<br>
-* run freesurfer-dev version to use t2w image for the pial surface using preproc/freesurfer_dev.py<br/>
-* make a "after_fs_dev" video of the fmriprep/freesurfer segmentation using mri_analysis/preproc/freeview.py<br>
-* manual edition of the pial surface using freeview launched with /preproc/pial_edits.py and following the rules of http://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEditsV6.0 <br/>
-* re-run freesurfer to include the manual change of the pial surface using preproc/freesurfer_pial.py<br/>
-* make a "after_manual_edit" video of the fmriprep/freesurfer segmentation using mri_analysis/preproc/freeview.py<br>
-* run fmriprpep on mesocentre using mri_analysis/preproc/fmriprep_sbatch.py<br/>
-* run pybest (modified to save niftis) to high pass filter and denoised the data with /preproc/pybest_sbatch.py<br/>
-* change to percent signal and averaged runs with preproc/psc_avg.py<br/>
-
-# pre-processing attempt (error with import)
 * run fmriprpep with anat-only option on mesocentre using mri_analysis/preproc/fmriprep_sbatch.py<br/>
 * make a "before_edit" video of the fmriprep/freesurfer segmentation using mri_analysis/preproc/freeview.py<br>
 * manual edition of the pial surface using freeview launched with /preproc/pial_edits.py and following the rules of http://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEditsV6.0 <br/>

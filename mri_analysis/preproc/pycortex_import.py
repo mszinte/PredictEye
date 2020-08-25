@@ -71,7 +71,6 @@ set_pycortex_config_file(base_dir)
 
 print('import subject in pycortex')
 # cortex.freesurfer.import_subj(fs_subject = subject, cx_subject = subject, freesurfer_subject_dir = fs_dir, whitematter_surf = 'smoothwm')
-
 cortex.freesurfer.import_flat(fs_subject = subject, cx_subject = subject, freesurfer_subject_dir = fs_dir, patch = 'full', auto_overwrite=True)
 deb()
 # Add transform to pycortex db
