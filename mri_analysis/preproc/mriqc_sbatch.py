@@ -19,11 +19,11 @@ To run:
 1. cd to function
 >> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
-python pre_fit/mriqc_sbatch.py [main directory] [project name] [subject num] 
+python preproc/mriqc_sbatch.py [main directory] [project name] [subject num] 
 					   		   [nb proc.] [hour proc.]
 -----------------------------------------------------------------------------------------
 Exemple:
-python pre_fit/mriqc_sbatch.py /scratch/mszinte/data PredictEye sub-01 32 5
+python preproc/mriqc_sbatch.py /scratch/mszinte/data PredictEye sub-01 32 5
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------

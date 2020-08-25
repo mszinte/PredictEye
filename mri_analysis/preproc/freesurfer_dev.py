@@ -1,9 +1,9 @@
 """
 -----------------------------------------------------------------------------------------
-freesurfer_pial.py
+freesurfer_dev.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Run freesurfer with new brainmask manually edited
+Run freesurfer-dev version to add T2 image in segmentation
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: main project directory
@@ -18,7 +18,7 @@ To run:
 1. cd to function
 >> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
-python pre_fit/freesurfer_pial.py [main directory] [project name] [subject num]
+python preproc/freesurfer-dev.py [main directory] [project name] [subject num]
 								 [hour proc.] 
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
@@ -59,7 +59,7 @@ slurm_cmd = """\
 #SBATCH --time={hour_proc}:00:00
 #SBATCH -e {log_dir}/{subject}_freesurfer-dev_%N_%j_%a.err
 #SBATCH -o {log_dir}/{subject}_freesurfer-dev_%N_%j_%a.out
-#SBATCH -J {subject}_freesurfer-pial
+#SBATCH -J {subject}_freesurfer-dev
 #SBATCH --mail-type=BEGIN,END\n\n""".format(nb_procs = nb_procs, hour_proc = hour_proc, subject = subject,
 											memory_val = memory_val, log_dir = log_dir, proj_name = proj_name)
 
@@ -70,11 +70,11 @@ fs_licence = '/scratch/mszinte/freesurfer/license.txt'
 freesurfer_cmd = """\
 export SUBJECTS_DIR={fs_dir}\n\
 export FS_LICENSE={fs_licence}\n\
-recon-all -autorecon-pial -subjid {subject}""".format(
-	fs_dir = fs_dir, fs_licence = fs_licence, subject = subject)
+recon-all -autorecon-pial -subjid {subject} -hires -T2pial -parallel -openmp {nb_procs}""".format(
+	fs_dir = fs_dir, fs_licence = fs_licence, subject = subject, nb_procs = nb_procs)
 
 # create sh folder and file
-sh_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/jobs/{subject}_freesurfer-pial.sh".format(main_dir = main_dir, subject = subject,project_dir = project_dir)
+sh_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/jobs/{subject}_freesurfer-dev.sh".format(main_dir = main_dir, subject = subject,project_dir = project_dir)
 
 try:
 	os.makedirs(opj(main_dir,project_dir,'deriv_data','fmriprep','jobs'))
