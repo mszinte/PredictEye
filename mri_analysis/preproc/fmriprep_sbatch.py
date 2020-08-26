@@ -22,7 +22,7 @@ To run:
 1. cd to function
 >> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
-python preproc/mriqc_sbatch.py [main directory] [project name] [subject num] [hour proc.] 
+python preproc/mriqc_sbatch.py [main directory] [project name] [subject num] [hour proc.]
 					           [anat only] [aroma] [fmapfree] [skip bids validation]
 -----------------------------------------------------------------------------------------
 Exemple:
@@ -31,7 +31,6 @@ python preproc/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 0 0
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
-
 """
 
 # imports modules
@@ -106,7 +105,7 @@ singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --f
 									use_skip_bids_val = use_skip_bids_val)
 
 # create sh folder and file
-sh_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/jobs/sub-{sub_num}_fmriprep.sh".format(main_dir = main_dir, sub_num = sub_num,project_dir = project_dir,)
+sh_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/jobs/sub-{sub_num}_fmriprep{anat_only_end}.sh".format(main_dir = main_dir, sub_num = sub_num,project_dir = project_dir,anat_only_end = anat_only_end)
 
 try:
 	os.makedirs(opj(main_dir,project_dir,'deriv_data','fmriprep','jobs'))
