@@ -13,7 +13,13 @@ Output(s):
 None
 -----------------------------------------------------------------------------------------
 To run:
-python preproc/save_tc.py sub-01 AttendFixGazeCenterFS_fmriprep_dct_avg
+cd /home/mszinte/projects/PredictEye/mri_analysis/
+python preproc/save_tc.py sub-01 SacLoc_fmriprep_dct_avg
+python preproc/save_tc.py sub-01 PurLoc_fmriprep_dct_avg
+python preproc/save_tc.py sub-01 pMF_fmriprep_dct_avg
+python preproc/save_tc.py sub-01 rest_fmriprep_dct_avg
+-----------------------------------------------------------------------------------------
+Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
 """
 
@@ -29,9 +35,9 @@ import sys
 import json
 import glob
 import numpy as np
-import ipdb
+import pdb
 opj = os.path.join
-deb = ipdb.set_trace
+deb = pdb.set_trace
 
 # MRI imports
 # -----------

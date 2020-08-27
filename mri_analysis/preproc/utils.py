@@ -3,9 +3,7 @@ def set_pycortex_config_file(data_folder):
     # Import necessary modules
     import os
     import cortex
-    import ipdb
     from pathlib import Path
-    deb = ipdb.set_trace
 
     # Define the new database and colormaps folder
     pycortex_db_folder = data_folder + '/pp_data/cortex/db'

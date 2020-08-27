@@ -1,9 +1,9 @@
 """
 -----------------------------------------------------------------------------------------
-psc_avg.py
+preproc_end.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Change to percent signal change, and average runs
+Arrange and average runs
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: subject name
@@ -16,7 +16,10 @@ Output(s):
 # Preprocessed timeseries files
 -----------------------------------------------------------------------------------------
 To run:
-python preproc/psc_avg.py
+1. cd /home/mszinte/projects/PredictEye/mri_analysis/
+2. python preproc/preproc_end.py
+-----------------------------------------------------------------------------------------
+Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
 """
 
@@ -32,11 +35,11 @@ import json
 import sys
 import os
 import glob
-import ipdb
+import pdb
 import platform
 import numpy as np
 opj = os.path.join
-deb = ipdb.set_trace
+deb = pdb.set_trace
 
 # MRI analysis imports
 # --------------------
@@ -85,28 +88,11 @@ for sub_name in analysis_info['subject_list'] :
 
             os.system("{cmd} {orig} {dest}".format(cmd = trans_cmd, orig = orig_file2, dest = dest_file2))
 
-    # Compute percent signal change
-    for preproc in analysis_info['preproc']:
-        file_list = sorted(glob.glob("{base_dir}/pp_data/{sub}/func/{preproc}/*{preproc}.nii.gz".format(
-                                             base_dir = base_dir, sub = sub_name, preproc = preproc)))
-        for file in file_list:
-            print('psc:'+file)
-            img = nb.load(file)
-            pp_data = img.get_fdata()
-            pp_data_median = np.median(pp_data, axis=3)
-            pp_data_median = np.repeat(pp_data_median[:, :, :, np.newaxis], pp_data.shape[3], axis=3)
-            pp_data_psc = 100.0 * (pp_data - pp_data_median)/pp_data_median
-
-            # save
-            new_file = "{file}_psc.nii.gz".format(file = file[:-7])
-            new_img = nb.Nifti1Image(dataobj = pp_data_psc, affine = img.affine, header = img.header)
-            new_img.to_filename(new_file)
-
     # Average tasks runs
     for preproc in analysis_info['preproc']:
         for task_name in analysis_info['task_names']:
             
-            file_list = sorted(glob.glob("{base_dir}/pp_data/{sub}/func/{preproc}/*{task_name}_*_psc.nii.gz".format(
+            file_list = sorted(glob.glob("{base_dir}/pp_data/{sub}/func/{preproc}/*{task_name}_*.nii.gz".format(
                                          base_dir = base_dir, sub = sub_name, preproc = preproc,task_name = task_name)))
                 
             img = nb.load(file_list[0])
@@ -122,7 +108,7 @@ for sub_name in analysis_info['subject_list'] :
                 data_avg += data_psc/len(file_list)
 
                 # save
-                new_file = "{base_dir}/pp_data/{sub}/func/{sub}_task-{task_name}_{preproc}_psc_avg.nii.gz".format(
+                new_file = "{base_dir}/pp_data/{sub}/func/{sub}_task-{task_name}_{preproc}_avg.nii.gz".format(
                             base_dir = base_dir, sub = sub_name, preproc = preproc, task_name = task_name)
                 new_img = nb.Nifti1Image(dataobj = data_avg, affine = img.affine, header = img.header)
                 new_img.to_filename(new_file)
