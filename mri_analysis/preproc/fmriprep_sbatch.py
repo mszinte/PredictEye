@@ -22,7 +22,7 @@ To run:
 1. cd to function
 >> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
-python preproc/mriqc_sbatch.py [main directory] [project name] [subject num] [hour proc.]
+python preproc/fmriprep_sbatch.py [main directory] [project name] [subject num] [hour proc.]
 					           [anat only] [aroma] [fmapfree] [skip bids validation]
 -----------------------------------------------------------------------------------------
 Exemple:

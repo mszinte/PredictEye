@@ -17,6 +17,8 @@ the ocumotor system.<br/>
 ## MRI Analysis
 
 # pre-processing
+* get data from Xnat in bids format, check all data present, add fmap "IntendedFor" parameters, check BIDS validity
+* run mriqc on mesocentre using mri_analysis/preproc/mriqc_sbatch.py<br/>
 * run fmriprpep with anat-only option on mesocentre using mri_analysis/preproc/fmriprep_sbatch.py<br/>
 * make a "before_edit" video of the fmriprep/freesurfer segmentation using mri_analysis/preproc/freeview.py<br>
 * manual edition of the pial surface using freeview launched with /preproc/pial_edits.py and following the rules of http://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEditsV6.0 <br/>
@@ -33,3 +35,4 @@ the ocumotor system.<br/>
 2. pRFexp:<br/>
 3. pMFexp:<br/>
 4. locEMexp:<br/>
+5. locVisEndEMexp:<br/>

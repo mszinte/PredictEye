@@ -8,7 +8,7 @@ Run frmiqc on mesocentre using job mode
 Input(s):
 sys.argv[1]: main project directory
 sys.argv[2]: project name (correspond to directory)
-sys.argv[3]: bids subject num (e.g. 001)
+sys.argv[3]: bids subject name (e.g. sub-01)
 sys.argv[4]: server nb of processor to use (e.g 32)
 sys.argv[5]: server nb of hour to request (e.g 10)
 -----------------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ To run:
 1. cd to function
 >> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
-python preproc/mriqc_sbatch.py [main directory] [project name] [subject num] 
+python preproc/mriqc_sbatch.py [main directory] [project name] [subject name] 
 					   		   [nb proc.] [hour proc.]
 -----------------------------------------------------------------------------------------
 Exemple:
