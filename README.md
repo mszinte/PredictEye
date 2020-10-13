@@ -32,15 +32,9 @@ the ocumotor system.<br/>
 12. Save time courses as pycortex webviewer
 
 ## Current stage pre-processing analysis
-+ -------------- + -----------------------+ <br/>
-|  subject name  |  current step and date | <br/>
-+ -------------- + ---------------------- + <br/>
-|     sub-01     |  step 6 (13/10/2020)   | <br/>
-+ -------------- + ---------------------- + <br/>
-|     sub-02     |  step 2 (09/10/2020)   | <br/>
-+ -------------- + ---------------------- + <br/>
-|     sub-03     |  step 2 (09/10/2020)   | <br/>
-+ -------------- + ---------------------- + <br/>
++ sub-01: pp step 6 (13/10/2020)<br/>
++ sub-03: pp step 2 (13/10/2020)<br/>
++ sub-03: pp step 2 (13/10/2020)<br/>
 
 ## behav_analysis
 1. RSexp:<br/>
