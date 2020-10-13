@@ -20,6 +20,7 @@
 # sh preproc/pial_edits.sh [main directory] [subject name] [mesocentre_ID]
 # -----------------------------------------------------------------------------------------
 # Exemple:
+# cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
 # sh preproc/pial_edits.sh /scratch/mszinte/data/PredictEye sub-01 mszinte
 # -----------------------------------------------------------------------------------------
 # Written by Martin Szinte (martin.szinte@gmail.com)
@@ -52,7 +53,7 @@ freeview -v ~/Desktop/temp_data/$2/mri/T1.mgz \
 
 # move the file to the right place
 while true; do
-	read -p "Do you wish to transfer the edited brainmask to the mesocentre? (y/n)" yn
+	read -p "Do you wish to transfer the edited brainmask to the mesocentre? (y/n) " yn
 	case $yn in
 		[Yy]* ) echo "\n>> Uploading of the brainmasks to mesocentre";\
 				rsync -avuz ~/Desktop/temp_data/$2/mri/brainmask.mgz $3@login.mesocentre.univ-amu.fr:$1/deriv_data/fmriprep/freesurfer/$2/mri/
