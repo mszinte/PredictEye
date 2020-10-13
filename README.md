@@ -1,6 +1,6 @@
 ## PredictEye
-By :      Martin SZINTE<br/>
-With :    Vanessa Morita, Anna Montagnini & Guillaume Masson<br/>
+By :      Martin SZINTE & Vanessa MORITA <br/>
+With :    Anna MONTAGNINI & Guillaume MASSON<br/>
 Version:  1.0<br/>
 
 ## Version description
