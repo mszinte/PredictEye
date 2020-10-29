@@ -2,7 +2,7 @@
 # pial_edits.py
 # -----------------------------------------------------------------------------------------
 # Goal of the script:
-# Run freeview to edit the segmetntation brainmask localy before transfering it back to 
+# Run freeview to edit the segmentation brainmask localy before transfering it back to 
 # the mesocentre
 # -----------------------------------------------------------------------------------------
 # Input(s):
@@ -32,12 +32,12 @@ echo "\n>> Copying the files to the desktop"
 rsync -azuv  --progress $3@login.mesocentre.univ-amu.fr:$1/deriv_data/fmriprep/freesurfer/$2 ~/Desktop/temp_data/
 
 # create a copy of the origninal brainmask
-NEWFILE=~/Desktop/temp_data/sub-01/mri/brainmask_orig.mgz
+NEWFILE=~/Desktop/temp_data/$1/mri/brainmask_orig.mgz
 if [ -f "$NEWFILE" ]; then
     echo "\n>> A copy of original brainmask already exists: $NEWFILE"
 else
 	echo "\n>> Creating a copy of original brainmask: $NEWFILE"
-	cp ~/Desktop/temp_data/sub-01/mri/brainmask.mgz $NEWFILE
+	cp ~/Desktop/temp_data/$1/mri/brainmask.mgz $NEWFILE
 fi
 
 # Check + edit pial surface

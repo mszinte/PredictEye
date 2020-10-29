@@ -23,7 +23,6 @@ Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
 """
 
-
 # Stop warnings
 # -------------
 import warnings
