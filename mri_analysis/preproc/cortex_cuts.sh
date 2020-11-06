@@ -31,12 +31,20 @@ echo "\n>> Copying the files to the desktop"
 rsync -azuv  --progress $4@login.mesocentre.univ-amu.fr:$1/deriv_data/fmriprep/freesurfer/$2 ~/Desktop/temp_data/
 
 # Check + edit pial surface
-echo "\n>> Proceed to the cortex cuts : https://docs.google.com/document/d/1mbx3EzTEYr4MIROWbgyklW_a7F6B4NX23bvk7VM7zeY/edit"
-echo "\n>> When you are done, save the patch as '$3.full.patch.3d'\n"
+echo "\n>> Proceed to the cortex cuts : "
+echo "\n>> When you are done, save the patch as '$2/surf/$3.full.patch.3d'\n"
 
-# on local computer with freeview 6 and 7 install
-export FREESURFER_HOME=/Applications/freesurfer/
-export SUBJECTS_DIR=~/Desktop/temp_data/
-source $FREESURFER_HOME/SetUpFreeSurfer.sh
+freeview -f ~/Desktop/temp_data/$2/surf/$3.inflated:annot=aparc.a2009s
 
-tksurfer $2 $3 inflated -curv -annotation aparc.a2009s
+# move the file to the right place
+while true; do
+	read -p "Do you wish to transfer the patch to the mesocentre? (y/n) " yn
+	case $yn in
+		[Yy]* ) echo "\n>> Uploading the $3 patch to mesocentre";\
+				rsync -avuz ~/Desktop/temp_data/$2/surf/$3.full.patch.3d $4@login.mesocentre.univ-amu.fr:$1/deriv_data/fmriprep/freesurfer/$2/surf/
+        break;;
+		[Nn]* ) echo "\n>> No uploading of the brainmasks to mesocentre";\
+				exit;;
+		* ) echo "Please answer yes or no.";;
+	esac
+done
