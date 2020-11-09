@@ -60,7 +60,6 @@ slurm_cmd = """\
 #!/bin/bash
 #SBATCH --mail-type=ALL
 #SBATCH -p skylake
-#SBATCH --mail-user=martin.szinte@univ-amu.fr
 #SBATCH -A {proj_name}
 #SBATCH --nodes=1
 #SBATCH --mem={memory_val}gb

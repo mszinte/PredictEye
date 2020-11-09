@@ -28,19 +28,15 @@ the ocumotor system.<br/>
 1. run mriqc on mesocentre using mri_analysis/preproc/mriqc_sbatch.py<br/>
 3. run fmriprpep with anat-only option on mesocentre using mri_analysis/preproc/fmriprep_sbatch.py<br/>
 4. make a "before_edit" video of the fmriprep/freesurfer segmentation using mri_analysis/preproc/freeview.py<br>
-5. manual edition of the pial surface using freeview launched with /preproc/pial_edits.py and following the rules of http://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEditsV6.0 <br/>
+5. manual edition of the pial surface using freeview launched with /preproc/pial_edits.sh and following the rules of http://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEditsV6.0 <br/>
 6. re-run freesurfer to include the manual change of the pial surface using preproc/freesurfer_pial.py<br/>
 7. make a "after_edit" video of the fmriprep/freesurfer segmentation using mri_analysis/preproc/freeview.py<br>
 8. Cut brainsflat with https://docs.google.com/document/d/1mbx3EzTEYr4MIROWbgyklW_a7F6B4NX23bvk7VM7zeY/edit<br/>
 9. Flatten hemispheres with preproc/flatten_sbatch.py<br/>
-10. Import in pycortex and save t1w/t2w maps as pycortex webviewer<br/>
+10. Import in pycortex with preproc/pycortex_import.py<br/>
 11. run pybest (modified to save niftis) to high pass filter and denoised the data with /preproc/pybest_sbatch.py<br/>
 12. Save time courses as pycortex webviewer<br/>
 
-## Current stage pre-processing analysis
-+ sub-01: pp step 6 (13/10/2020)<br/>
-+ sub-03: pp step 2 (13/10/2020)<br/>
-+ sub-03: pp step 2 (13/10/2020)<br/>
 
 ## behav_analysis
 1. RSexp:<br/>

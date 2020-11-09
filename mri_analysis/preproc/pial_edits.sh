@@ -43,13 +43,13 @@ fi
 # Check + edit pial surface
 echo "\n>> Edit the brain mask following https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEdits_freeview"
 echo ">> When you are done, save the brainmask and quit freeview"
-freeview -v ~/Desktop/temp_data/$2/mri/T1.mgz \
+"freeview -v ~/Desktop/temp_data/$2/mri/T1.mgz \
 ~/Desktop/temp_data/$2/mri/T2.mgz \
 ~/Desktop/temp_data/$2/mri/brainmask.mgz \
 -f ~/Desktop/temp_data/$2/surf/lh.white:edgecolor=yellow \
 ~/Desktop/temp_data/$2/surf/lh.pial:edgecolor=red \
 ~/Desktop/temp_data/$2/surf/rh.white:edgecolor=yellow \
-~/Desktop/temp_data/$2/surf/rh.pial:edgecolor=red
+~/Desktop/temp_data/$2/surf/rh.pial:edgecolor=red"
 
 # move the file to the right place
 while true; do
