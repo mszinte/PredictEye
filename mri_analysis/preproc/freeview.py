@@ -24,8 +24,7 @@ python /preproc/freeview.py [main directory] [project name] [subject num]
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
-python PredictEye/mri_analysis/preproc/freeview.py ~/disks/meso_S/data/ PredictEye \
-sub-01 50 250 before_edit
+python preproc/freeview.py ~/disks/meso_S/data/ PredictEye sub-01 50 250 before_edit
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
