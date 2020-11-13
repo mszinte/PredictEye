@@ -31,25 +31,25 @@
 echo "\n>> Copying the files to the desktop"
 rsync -azuv  --progress $3@login.mesocentre.univ-amu.fr:$1/deriv_data/fmriprep/freesurfer/$2 ~/Desktop/temp_data/
 
-# create a copy of the origninal brainmask
-NEWFILE=~/Desktop/temp_data/$1/mri/brainmask_orig.mgz
-if [ -f "$NEWFILE" ]; then
-    echo "\n>> A copy of original brainmask already exists: $NEWFILE"
-else
-	echo "\n>> Creating a copy of original brainmask: $NEWFILE"
-	cp ~/Desktop/temp_data/$1/mri/brainmask.mgz $NEWFILE
-fi
+# # create a copy of the origninal brainmask
+# NEWFILE=~/Desktop/temp_data/$2/mri/brainmask_orig.mgz
+# if [ -f "$NEWFILE" ]; then
+#     echo "\n>> A copy of original brainmask already exists: $NEWFILE"
+# else
+# 	echo "\n>> Creating a copy of original brainmask: $NEWFILE"
+# 	cp ~/Desktop/temp_data/$2/mri/brainmask.mgz $NEWFILE
+# fi
 
 # Check + edit pial surface
 echo "\n>> Edit the brain mask following https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/PialEdits_freeview"
 echo ">> When you are done, save the brainmask and quit freeview"
-"freeview -v ~/Desktop/temp_data/$2/mri/T1.mgz \
+freeview -v ~/Desktop/temp_data/$2/mri/T1.mgz \
 ~/Desktop/temp_data/$2/mri/T2.mgz \
 ~/Desktop/temp_data/$2/mri/brainmask.mgz \
 -f ~/Desktop/temp_data/$2/surf/lh.white:edgecolor=yellow \
 ~/Desktop/temp_data/$2/surf/lh.pial:edgecolor=red \
 ~/Desktop/temp_data/$2/surf/rh.white:edgecolor=yellow \
-~/Desktop/temp_data/$2/surf/rh.pial:edgecolor=red"
+~/Desktop/temp_data/$2/surf/rh.pial:edgecolor=red
 
 # move the file to the right place
 while true; do
