@@ -14,6 +14,7 @@ sys.argv[5]: anat only (1) or not (0)
 sys.argv[6]: use of aroma (1) or not (0)
 sys.argv[7]: use Use fieldmap-free distortion correction
 sys.argv[8]: skip BIDS validation (1) or not (0)
+sys.argv[9]: email account
 -----------------------------------------------------------------------------------------
 Output(s):
 preprocessed files
@@ -23,11 +24,11 @@ To run:
 >> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
 python preproc/fmriprep_sbatch.py [main directory] [project name] [subject num] [hour proc.]
-					           [anat only] [aroma] [fmapfree] [skip bids validation]
+					           [anat only] [aroma] [fmapfree] [skip bids validation] [email account]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 1 0 0 0
-python preproc/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 0 0 0 0
+python preproc/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 1 0 0 0 martin.szinte
+python preproc/fmriprep_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 0 0 0 0 martin.szinte
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -53,6 +54,7 @@ anat = int(sys.argv[5])
 aroma = int(sys.argv[6])
 fmapfree = int(sys.argv[7])
 skip_bids_val = int(sys.argv[8])
+email_account = sys.argv[9]
 
 # Define cluster/server specific parameters
 cluster_name  = 'skylake'
@@ -80,7 +82,7 @@ slurm_cmd = """\
 #!/bin/bash
 #SBATCH --mail-type=ALL
 #SBATCH -p skylake
-#SBATCH --mail-user=martin.szinte@univ-amu.fr
+#SBATCH --mail-user={email_account}@univ-amu.fr
 #SBATCH -A {proj_name}
 #SBATCH --nodes=1
 #SBATCH --mem={memory_val}gb
@@ -90,7 +92,7 @@ slurm_cmd = """\
 #SBATCH -o {log_dir}/{subject}_fmriprep{anat_only_end}_%N_%j_%a.out
 #SBATCH -J {subject}_fmriprep{anat_only_end}
 #SBATCH --mail-type=BEGIN,END\n\n""".format(proj_name = proj_name, nb_procs = nb_procs, hour_proc = hour_proc, subject = subject,
-											anat_only_end = anat_only_end, memory_val = memory_val, log_dir = log_dir)
+											anat_only_end = anat_only_end, memory_val = memory_val, log_dir = log_dir, email_account = email_account)
 
 # define singularity cmd
 singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/freesurfer/license.txt /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/fmriprep/ participant --participant-label {sub_num} -w /work_dir/{project_dir}/temp_data/ --bold2t1w-dof 12 --output-spaces T1w MNI152NLin2009cAsym --cifti-output --low-mem --mem-mb 32000 --nthreads {nb_procs:.0f}{anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
