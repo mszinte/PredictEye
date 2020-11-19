@@ -14,7 +14,6 @@ def set_pycortex_config_file(data_folder):
     # Get pycortex config file location
     pycortex_config_file  = cortex.options.usercfg
 
-
     # Create name of new config file that will be written
     new_pycortex_config_file = pycortex_config_file[:-4] + '_new.cfg'
 
@@ -54,44 +53,36 @@ def set_pycortex_config_file(data_folder):
 
 
 def convert_fit_results(est_fn,
-                        output_dir,
+                        output_fn,
                         stim_width,
-                        stim_height,
-                        fit_model,
-                        acq):
+                        stim_height):
     """
     Convert pRF fitting value in different parameters for following analysis
    
     Parameters
     ----------
     est_fn: absolute paths to estimates file
-    output_dir: absolute path to directory into which to put the resulting files
+    output_fn: absolute path to derivative file
     stim_width: stimulus width in deg
     stim_heigth: stimulus height in deg
-    fit_model: fit model ('gauss','css')
-    acq: acquisition type ('acq-2p5mm','acq-2mm')
 
     Returns
     -------
-    prf_deriv_all: derivative of pRF analysis for all pRF voxels
-    prf_deriv_neg: derivative of pRF analysis for all negative pRF voxels
-    prf_deriv_pos: derivative of pRF analysis for all positive pRF voxels
+    prf_deriv: derivative of pRF analysis
 
     stucture output:
     columns: 1->size of input
-    row00 : sign
-    row01 : R2
-    row02 : eccentricity in deg
-    row03 : polar angle real component in deg
-    row04 : polar angle imaginary component in deg
-    row05 : size in deg
-    row06 : non-linerity or nans
-    row07 : amplitude
-    row08 : baseline
-    row09 : coverage
-    row10 : x
-    row11 : y
-    ['prf_sign','prf_rsq','prf_ecc','prf_polar_real','prf_polar_imag','prf_size','prf_non_lin','prf_amp','prf_baseline','prf_cov','prf_x','prf_y']
+    row00 : R2
+    row01 : eccentricity in deg
+    row02 : polar angle real component in deg
+    row03 : polar angle imaginary component in deg
+    row04 : size in deg
+    row05 : amplitude
+    row06 : baseline
+    row07 : coverage
+    row08 : x
+    row09 : y
+    ['prf_rsq','prf_ecc','prf_polar_real','prf_polar_imag','prf_size','prf_amp','prf_baseline','prf_cov','prf_x','prf_y']
     """
 
     # Imports
@@ -103,18 +94,9 @@ def convert_fit_results(est_fn,
     import numpy as np
     import ipdb
     deb = ipdb.set_trace
-
+    
     # Popeye imports
     from popeye.spinach import generate_og_receptive_fields
-
-    # Create folders
-    # --------------
-    try:
-        os.makedirs(os.path.join(output_dir,'all'))
-        os.makedirs(os.path.join(output_dir,'pos'))
-        os.makedirs(os.path.join(output_dir,'neg'))
-    except:
-        pass
 
     # Get data details
     # ----------------
@@ -125,94 +107,72 @@ def convert_fit_results(est_fn,
     # Compute derived measures from prfs
     # ----------------------------------
     # get data index
-    if fit_model == 'gauss':
-        x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, rsq_idx = 0, 1, 2, 3, 4, 5
-    elif fit_model == 'css':
-        x_idx, y_idx, sigma_idx, non_lin_idx, beta_idx, baseline_idx, rsq_idx = 0, 1, 2, 3, 4, 5, 6
-
+    x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, rsq_idx = 0, 1, 2, 3, 4, 5
 
     # change to nan empty voxels
     est[est[:,:,:,rsq_idx] == 0] = np.nan
-
-    # pRF sign
-    prf_sign_all = np.sign((est[:,:,:,beta_idx]))
-    pos_mask = prf_sign_all > 0.0
-    neg_mask = prf_sign_all < 0.0
-    all_mask = pos_mask | neg_mask
     
     # r-square
-    prf_rsq_all = est[:,:,:,rsq_idx]
+    prf_rsq = est[:,:,:,rsq_idx]
 
     # pRF eccentricity
-    prf_ecc_all = np.nan_to_num(np.sqrt(est[:,:,:,x_idx]**2 + est[:,:,:,y_idx]**2))
+    prf_ecc = np.nan_to_num(np.sqrt(est[:,:,:,x_idx]**2 + est[:,:,:,y_idx]**2))
 
     # pRF polar angle
     complex_polar = est[:,:,:,x_idx] + 1j * est[:,:,:,y_idx]
     normed_polar = complex_polar / np.abs(complex_polar)
-    prf_polar_real_all = np.real(normed_polar)
-    prf_polar_imag_all = np.imag(normed_polar)
+    prf_polar_real = np.real(normed_polar)
+    prf_polar_imag = np.imag(normed_polar)
     
     # pRF size
-    prf_size_all = est[:,:,:,sigma_idx].astype(np.float64)
-    prf_size_all[prf_size_all<1e-4] = 1e-4
-
-    # pRF non-linearity
-    if fit_model == 'gauss':
-        prf_non_lin_all = np.zeros((prf_size_all.shape))*np.nan
-    elif fit_model == 'css':
-        prf_non_lin_all = est[:,:,:,non_lin_idx]
+    prf_size = est[:,:,:,sigma_idx].astype(np.float64)
+    prf_size[prf_size<1e-4] = 1e-4
 
     # pRF amplitude
-    prf_amp_all = est[:,:,:,beta_idx]
+    prf_amp = est[:,:,:,beta_idx]
     
     # pRF baseline
-    prf_baseline_all = est[:,:,:,baseline_idx]
+    prf_baseline = est[:,:,:,baseline_idx]
 
     # pRF coverage
-    deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 121), np.linspace(-30, 30, 121))         # define prfs in visual space
-    
+    deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 50), np.linspace(-30, 30, 50))         # define prfs in visual space
     flat_est = est.reshape((-1, est.shape[-1])).astype(np.float64)
-
     rfs = generate_og_receptive_fields( flat_est[:,x_idx],
                                         flat_est[:,y_idx],
                                         flat_est[:,sigma_idx],
                                         flat_est[:,beta_idx].T*0+1,
                                         deg_x,
                                         deg_y)
-    if fit_model == 'css':
-        rfs = rfs ** flat_est[:,non_lin_idx]
-    
 
     total_prf_content = rfs.reshape((-1, flat_est.shape[0])).sum(axis=0)
     log_x = np.logical_and(deg_x >= -stim_width/2.0, deg_x <= stim_width/2.0)
     log_y = np.logical_and(deg_y >= -stim_height/2.0, deg_y <= stim_height/2.0)
     stim_vignet = np.logical_and(log_x,log_y)
-    prf_cov_all = rfs[stim_vignet, :].sum(axis=0) / total_prf_content
-    prf_cov_all = prf_cov_all.reshape(prf_baseline_all.shape)
+    prf_cov = rfs[stim_vignet, :].sum(axis=0) / total_prf_content
+    prf_cov = prf_cov.reshape(prf_baseline.shape)
     
     # pRF x
-    prf_x_all = est[:,:,:,x_idx]
+    prf_x = est[:,:,:,x_idx]
 
     # pRF y
-    prf_y_all = est[:,:,:,y_idx]
+    prf_y = est[:,:,:,y_idx]
 
     # Save results
-    prf_deriv_all = np.zeros((est.shape[0],est.shape[1],est.shape[2],12))*np.nan
-    prf_deriv_pos = np.zeros((est.shape[0],est.shape[1],est.shape[2],12))*np.nan
-    prf_deriv_neg = np.zeros((est.shape[0],est.shape[1],est.shape[2],12))*np.nan
-    output_list = ['prf_sign','prf_rsq','prf_ecc','prf_polar_real','prf_polar_imag','prf_size','prf_non_lin','prf_amp','prf_baseline','prf_cov','prf_x','prf_y']
-
-    for prf_sign in ['all','pos','neg']:
-        print('saving: %s'%('os.path.join(output_dir,"{prf_sign}","prf_deriv_{prf_sign}.nii.gz")'.format(prf_sign = prf_sign)))
-        for output_num, output_type in enumerate(output_list):
-            exec('{output_type}_{prf_sign} = np.copy({output_type}_all)'.format(prf_sign = prf_sign, output_type = output_type))
-            exec('{output_type}_{prf_sign}[~{prf_sign}_mask] = np.nan'.format(prf_sign = prf_sign, output_type = output_type))
-
-            exec('prf_deriv_{prf_sign}[...,{output_num}]  = {output_type}_{prf_sign}'.format(prf_sign = prf_sign, output_type = output_type, output_num = output_num))
-
-        exec('prf_deriv_{prf_sign} = prf_deriv_{prf_sign}.astype(np.float32)'.format(prf_sign = prf_sign))
-        exec('new_img = nb.Nifti1Image(dataobj = prf_deriv_{prf_sign}, affine = img_est.affine, header = img_est.header)'.format(prf_sign = prf_sign))
-        exec('new_img.to_filename(os.path.join(output_dir,"{prf_sign}","prf_deriv_{acq}_{prf_sign}.nii.gz"))'.format(prf_sign = prf_sign, acq = acq))
+    prf_deriv = np.zeros((est.shape[0],est.shape[1],est.shape[2],10))*np.nan
+    prf_deriv[...,0]  = prf_rsq
+    prf_deriv[...,1]  = prf_ecc
+    prf_deriv[...,2]  = prf_polar_real
+    prf_deriv[...,3]  = prf_polar_imag
+    prf_deriv[...,4]  = prf_size
+    prf_deriv[...,5]  = prf_amp
+    prf_deriv[...,6]  = prf_baseline
+    prf_deriv[...,7]  = prf_cov
+    prf_deriv[...,8]  = prf_x
+    prf_deriv[...,9]  = prf_y
+        
+    prf_deriv = prf_deriv.astype(np.float32)
+    new_img = nb.Nifti1Image(dataobj = prf_deriv, affine = img_est.affine, header = img_est.header)
+    new_img.to_filename(output_fn)
 
     return None
     
@@ -277,9 +237,10 @@ def draw_cortex_vertex(subject,xfmname,data,cmap,vmin,vmax,description,cbar = 'd
     alpha = alpha*255.0
 
     # define volume RGB
-    volume = cortex.VolumeRGB(  red = mat[...,0].T.astype(np.uint8),
-                                green = mat[...,1].T.astype(np.uint8),
-                                blue = mat[...,2].T.astype(np.uint8),
+    
+    volume = cortex.VolumeRGB(  channel1 = mat[...,0].T.astype(np.uint8),
+                                channel2 = mat[...,1].T.astype(np.uint8),
+                                channel3 = mat[...,2].T.astype(np.uint8),
                                 alpha = alpha.T.astype(np.uint8),
                                 subject = subject,
                                 xfmname = xfmname)
@@ -295,7 +256,7 @@ def draw_cortex_vertex(subject,xfmname,data,cmap,vmin,vmax,description,cbar = 'd
                                     with_borders = with_borders,
                                     curvature_brightness = curv_brightness,
                                     curvature_contrast = curv_contrast)
-    
+
     if cbar == 'polar':
         
         base = cortex.utils.get_cmap(cmap)
@@ -382,7 +343,7 @@ def draw_cortex_vertex(subject,xfmname,data,cmap,vmin,vmax,description,cbar = 'd
 
     return volume
 
-def mask_nifti_2_hdf5(deriv_file, tc_file, mask_file_L, mask_file_R, model_func, hdf5_file, folder_alias):
+def mask_nifti_2_hdf5(deriv_file, tc_file, mask_file_L, mask_file_R, hdf5_file, model, folder_alias):
     """
     masks data in in_file with mask in mask_file,
     to be stored in an hdf5 file
@@ -394,8 +355,8 @@ def mask_nifti_2_hdf5(deriv_file, tc_file, mask_file_L, mask_file_R, model_func,
     in_files : absolute path to functional nifti-file
     mask_file_L : absolute path to LH mask nifti-file 
     mask_file_R : absolute path to RH mask nifti-file 
-    model_func: pRF model function
     hdf5_file : absolute path to hdf5 file.
+    model : pRF model
     folder_alias : name of the to-be-created folder in the hdf5 file.
     
     Returns
@@ -412,17 +373,17 @@ def mask_nifti_2_hdf5(deriv_file, tc_file, mask_file_L, mask_file_R, model_func,
 
     # load deriv file to mask
     deriv_file_img = nb.load(deriv_file)
-    deriv_file_data = deriv_file_img.get_data()
+    deriv_file_data = deriv_file_img.get_fdata()
 
     # load tc file to mask
     tc_file_img = nb.load(tc_file)
-    tc_file_data = tc_file_img.get_data()
+    tc_file_data = tc_file_img.get_fdata()
     
     # load masks
     mask_file_L_img = nb.load(mask_file_L)
-    mask_file_L_data = mask_file_L_img.get_data()
+    mask_file_L_data = mask_file_L_img.get_fdata()
     mask_file_R_img = nb.load(mask_file_R)
-    mask_file_R_data = mask_file_R_img.get_data()
+    mask_file_R_data = mask_file_R_img.get_fdata()
     # mask_file_data = mask_file_L_data + mask_file_R_data
     
     
@@ -443,21 +404,21 @@ def mask_nifti_2_hdf5(deriv_file, tc_file, mask_file_L, mask_file_R, model_func,
     tc_mask_R_data = tc_file_data[mask_file_R_data == True,:]
     tc_mask_data = np.vstack((tc_mask_L_data,tc_mask_R_data))
 
-
     # model time course
-    sign_idx, rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-            non_lin_idx, amp_idx, baseline_idx, cov_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8,9,10,11
+    rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
+            amp_idx, baseline_idx, cov_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8,9
     tc_model_mask_data = np.zeros(tc_mask_data.shape)*np.nan
+       
     for i in np.arange(0,tc_model_mask_data.shape[0]):
         if np.isnan(deriv_mask_data[i,rsq_idx]):
             pass
         else:
-            tc_model_mask_data[i,:] = model_func.generate_prediction(x = deriv_mask_data[i,x_idx],
-                                                                     y = deriv_mask_data[i,y_idx], 
-                                                                     sigma = deriv_mask_data[i,size_idx],
-                                                                     beta = deriv_mask_data[i,amp_idx],
-                                                                     baseline = deriv_mask_data[i,baseline_idx])
-    
+            tc_model_mask_data[i,:] = model.return_prediction(mu_x = deriv_mask_data[i,x_idx],
+                                                              mu_y = deriv_mask_data[i,y_idx], 
+                                                              size = deriv_mask_data[i,size_idx],
+                                                              beta = deriv_mask_data[i,amp_idx],
+                                                              baseline = deriv_mask_data[i,baseline_idx])
+
     try:
         h5file = h5py.File(hdf5_file, "r+")
     except:

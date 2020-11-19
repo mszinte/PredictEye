@@ -1,22 +1,28 @@
 """
 -----------------------------------------------------------------------------------------
-submit_fit_jobs
+submit_fit_jobs.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-create jobscript to run locally or in a cluster
+Create jobscript to fit pRFs
 -----------------------------------------------------------------------------------------
 Input(s):
-sys.argv[1]: cluster name ('skylake','westmere','debug')
-sys.argv[2]: subject name (e.g. 'sub-01')
-sys.argv[3]: acquisition (e.g. 'acq-2p5mm','acq-2mm')
-sys.argv[4]: fit model ('gauss','css')
+sys.argv[1]: subject name (e.g. sub-01)
+sys.argv[2]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
+sys.argv[3]: registration type (e.g. T1w)
 -----------------------------------------------------------------------------------------
 Output(s):
 .sh file to execute in server
 -----------------------------------------------------------------------------------------
+To run:
+>> cd to function
+>> python fit/submit_fit_fs_jobs.py [subject] [preproc] [registration]
+-----------------------------------------------------------------------------------------
 Exemple:
-cd /scratch/mszinte/projects/pRFseqTest/mri_analysis/
-python fit/submit_fit_jobs.py debug sub-01 acq-2p5mm gauss
+cd /home/mszinte/projects/PredictEye/mri_analysis/
+python fit/submit_fit_jobs.py sub-01 fmriprep_dct T1w
+python fit/submit_fit_jobs.py sub-01 fmriprep_dct_pca T1w
+-----------------------------------------------------------------------------------------
+Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
 """
 
@@ -40,12 +46,11 @@ deb = ipdb.set_trace
 opj = os.path.join
 
 # Settings
-# ----------
+# --------
 # Inputs
-cluster_name = sys.argv[1]
-subject = sys.argv[2]
-acq = sys.argv[3]
-fit_model = sys.argv[4]
+subject = sys.argv[1]
+preproc = sys.argv[2]
+regist_type = sys.argv[3]
 
 # Analysis parameters
 with open('settings.json') as f:
@@ -55,56 +60,30 @@ with open('settings.json') as f:
 # Cluster settings
 base_dir = analysis_info['base_dir']
 sub_command = 'sbatch '
-if cluster_name  == 'skylake':
-    fit_per_hour = 1250.0
-    nb_procs = 32
-    proj_name = 'a161'
-    # copy data from /scratchw to /scratch
-    os.system("rsync -az --no-g --no-p --progress {scratchw}/ {scratch}".format(
-                scratch = analysis_info['base_dir'],
-                scratchw  = analysis_info['base_dir_westmere']))
-elif cluster_name  == 'westmere':
-    base_dir = analysis_info['base_dir_westmere'] 
-    fit_per_hour = 800.0
-    nb_procs = 12
-    proj_name = 'westmere'
-    # copy data from /scratch to /scratchw
-    os.system("rsync -az --no-g --no-p --progress {scratch}/ {scratchw}".format(
-        scratch = analysis_info['base_dir'],
-        scratchw  = base_dir))
-    
-elif cluster_name == 'debug':
-    sub_command = 'sh '
-    fit_per_hour = 200.0
-    nb_procs = 1
+fit_per_hour = 6000.0
+nb_procs = 32
+memory_val = 48
+proj_name = 'b161'
 
-jobscript__file = opj(os.getcwd(),'fit',"{}_jobscript_template.sh".format(cluster_name))
-print("pRF analysis: running on {}".format(cluster_name))
+print("pRF analysis: running on Skylake")
 
 # Create job and log output folders
 try:
-    os.makedirs(opj(base_dir, 'pp_data', subject, fit_model, 'jobs'))
-    os.makedirs(opj(base_dir, 'pp_data', subject, fit_model, 'log_outputs'))
+    os.makedirs(opj(base_dir, 'pp_data', subject, 'gauss', 'jobs'))
+    os.makedirs(opj(base_dir, 'pp_data', subject, 'gauss', 'log_outputs'))
 except:
     pass
 
-
 # Determine data to analyse
-data_file  =  "{base_dir}/pp_data/{sub}/func/{sub}_task-AttendStim_{acq}_fmriprep_sg_psc_avg.nii.gz".format(
-                                base_dir = base_dir,
-                                sub = subject,
-                                acq = acq)
+data_file = "{base_dir}/pp_data/{sub}/func/{sub}_task-pRF_space-{reg}_{preproc}_avg.nii.gz".format(
+                        base_dir = base_dir, sub = subject, reg = regist_type, preproc = preproc)
+
 img_data = nb.load(data_file)
 data = img_data.get_fdata()
+data_var = np.var(data,axis=3)
+mask = data_var!=0.0
+slices = np.arange(mask.shape[2])[mask.sum(axis=(0,1))>0]
 
-mask_file  =  "{base_dir}/pp_data/{sub}/func/{sub}_task-AttendStim_{acq}_fmriprep_mask_avg.nii.gz".format(
-                                base_dir = base_dir,
-                                sub = subject,
-                                acq = acq)
-
-img_mask = nb.load(mask_file)
-mask = img_mask.get_fdata()
-slices = np.arange(mask.shape[2])[mask.mean(axis=(0,1))>0]
 
 
 for slice_nb in slices:
@@ -113,14 +92,13 @@ for slice_nb in slices:
     job_dur = str(datetime.timedelta(hours = np.ceil(num_vox/fit_per_hour)))
 
     # Define output file
-    opfn = "{base_dir}/pp_data/{subject}/{fit_model}/fit/{subject}_task-AttendStim_{acq}_est_z_{slice_nb}.nii.gz".format(
+    opfn = "{base_dir}/pp_data/{subject}/gauss/fit/{subject}_task-pRF_space-{reg}_{preproc}_avg_est_z_{slice_nb}.nii.gz".format(
                                 base_dir = base_dir,
                                 subject = subject,
-                                fit_model = fit_model,
-                                acq = acq,
-                                slice_nb = slice_nb
-                                )
-    log_dir = opj(base_dir,'pp_data',subject,fit_model,'log_outputs')
+                                reg = regist_type,
+                                preproc = preproc,             
+                                slice_nb = slice_nb)
+    log_dir = opj(base_dir,'pp_data',subject,'gauss','log_outputs')
 
     if os.path.isfile(opfn):
         if os.path.getsize(opfn) != 0:
@@ -129,49 +107,50 @@ for slice_nb in slices:
                                 slice_nb = slice_nb))
             continue
 
-    # create job shell
-    if cluster_name != 'debug':
-        slurm_cmd = """\
+        # create job shell
+
+    slurm_cmd = """\
 #!/bin/bash
-#SBATCH -p {cluster_name}
+#SBATCH -p skylake
 #SBATCH -A {proj_name}
 #SBATCH --nodes=1
+#SBATCH --mem={memory_val}gb
 #SBATCH --cpus-per-task={nb_procs}
 #SBATCH --time={job_dur}
-#SBATCH -e {log_dir}/{subject}_{acq}_fit_slice_{slice_nb}_%N_%j_%a.err
-#SBATCH -o {log_dir}/{subject}_{acq}_fit_slice_{slice_nb}_%N_%j_%a.out
-#SBATCH -J {subject}_{acq}_fit_slice_{slice_nb}\n\n""".format(
-                    cluster_name = cluster_name,        proj_name = proj_name,
-                    nb_procs = nb_procs,                log_dir = log_dir,
-                    job_dur = job_dur,                  subject = subject,
-                    acq = acq,                          slice_nb = slice_nb)
-
-    else:
-        slurm_cmd = ""
-
-    # define fit cmd
-    fit_cmd = "python fit/prf_fit.py {cluster_name} {fit_model} {subject} {data_file} {mask_file} {slice_nb} {opfn}".format(
-                cluster_name = cluster_name,
-                fit_model = fit_model,
-                subject = subject,
-                data_file = data_file,
-                mask_file = mask_file,
-                slice_nb = slice_nb,
-                opfn = opfn)
+#SBATCH -e {log_dir}/{subject}_task-pRF_space-{reg}_{preproc}_fit_slice_{slice_nb}_%N_%j_%a.err
+#SBATCH -o {log_dir}/{subject}_task-pRF_space-{preproc}_fit_slice_{slice_nb}_%N_%j_%a.out
+#SBATCH -J {subject}_task-pRF_space-{reg}_{preproc}_fit_slice_{slice_nb}\n\n""".format(
+                                            proj_name = proj_name,
+                                            nb_procs = nb_procs,
+                                            memory_val = memory_val,
+                                            log_dir = log_dir,
+                                            job_dur = job_dur,
+                                            subject = subject,
+                                            reg = regist_type,
+                                            preproc = preproc,
+                                            slice_nb = slice_nb)
 
     
+    # define fit cmd
+    fit_cmd = "python fit/prf_fit.py {subject} {preproc} {slice_nb} {reg} {opfn}".format(
+                subject = subject,
+                preproc = preproc,
+                slice_nb = slice_nb,
+                reg = regist_type,
+                opfn = opfn)
+    
     # create sh folder and file
-    sh_dir = "{base_dir}/pp_data/{subject}/{fit_model}/jobs/{subject}_{acq}_fit_slice_{slice_nb}.sh".format(
+    sh_dir = "{base_dir}/pp_data/{subject}/gauss/jobs/{subject}_task-pRF_space-{reg}_{preproc}_fit_slice_{slice_nb}.sh".format(
                 base_dir = base_dir,
                 subject = subject,
-                fit_model = fit_model,
-                acq = acq,
+                reg = regist_type,
+                preproc = preproc,
                 slice_nb = slice_nb)
 
     try:
-        os.makedirs(opj(base_dir,'pp_data',subject,fit_model,'fit'))
-        os.makedirs(opj(base_dir,'pp_data',subject,fit_model,'jobs'))
-        os.makedirs(opj(base_dir,'pp_data',subject,fit_model,'log_outputs'))
+        os.makedirs(opj(base_dir,'pp_data',subject,'gauss','fit'))
+        os.makedirs(opj(base_dir,'pp_data',subject,'gauss','jobs'))
+        os.makedirs(opj(base_dir,'pp_data',subject,'gauss','log_outputs'))
     except:
         pass
 
