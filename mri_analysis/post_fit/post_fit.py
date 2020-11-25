@@ -6,23 +6,21 @@ Goal of the script:
 Combine fit files, compute pRF derivatives
 -----------------------------------------------------------------------------------------
 Input(s):
-sys.argv[1]: subject name (e.g. 'sub-001')
-sys.argv[2]: task (ex: GazeCenterFS)
-sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
+sys.argv[1]: subject name (e.g. sub-01)
+sys.argv[2]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
+sys.argv[3]: registration (e.g. T1w)
 -----------------------------------------------------------------------------------------
 Output(s):
 Combined estimate nifti file and pRF derivative nifti file
 -----------------------------------------------------------------------------------------
 To run:
 >> cd to function
->> python post_fit/post_fit.py [subject] [task] [preproc]
+>> python post_fit/post_fit.py [subject] [preproc] [reg]
 -----------------------------------------------------------------------------------------
 Exemple:
-cd /home/mszinte/projects/pRFgazeMod/mri_analysis/
-python post_fit/post_fit.py sub-001 GazeCenterFS fmriprep_dct
-python post_fit/post_fit.py sub-001 GazeCenterFS fmriprep_dct_pca
-
-python post_fit/post_fit.py sub-002 GazeCenterFS fmriprep_dct_pca
+cd /home/mszinte/projects/PredictEye/mri_analysis/
+python post_fit/post_fit.py sub-01 fmriprep_dct T1w
+python post_fit/post_fit.py sub-01 fmriprep_dct_pca T1w
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -59,8 +57,8 @@ from utils import convert_fit_results
 # Get inputs
 # ----------
 subject = sys.argv[1]
-task = sys.argv[2]
-preproc = sys.argv[3]
+preproc = sys.argv[2]
+regist_type = sys.argv[3]
 
 # Define analysis parameters
 # --------------------------
@@ -76,8 +74,8 @@ deriv_dir = opj(base_dir,'pp_data',subject,'gauss','deriv')
 # Check if all slices are present
 # -------------------------------
 # Original data to analyse
-data_file = "{base_dir}/pp_data/{sub}/func/{sub}_task-{task}_{preproc}_avg.nii.gz".format(
-                        base_dir = base_dir, sub = subject, task = task, preproc = preproc)
+data_file = "{base_dir}/pp_data/{sub}/func/{sub}_task-pRF_space-{reg}_{preproc}_avg.nii.gz".format(
+                        base_dir = base_dir, sub = subject, reg = regist_type, preproc = preproc)
 
 img_data = nb.load(data_file)
 data = img_data.get_fdata()
@@ -88,13 +86,13 @@ slices = np.arange(mask.shape[2])[mask.sum(axis=(0,1))>0]
 est_files = []
 miss_files_nb = 0
 for slice_nb in slices:
-    est_file = "{base_dir}/pp_data/{subject}/gauss/fit/{subject}_task-{task}_{preproc}_avg_est_z_{slice_nb}.nii.gz".format(
+    est_file = "{base_dir}/pp_data/{subject}/gauss/fit/{subject}_task-pRF_space-{reg}_{preproc}_avg_est_z_{slice_nb}.nii.gz".format(
                                 base_dir = base_dir,
                                 subject = subject,
-                                task = task,
+                                reg = regist_type,
                                 preproc = preproc,
                                 slice_nb = slice_nb)
-    
+
     if os.path.isfile(est_file):
         if os.path.getsize(est_file) == 0:
             num_miss_part += 1 
@@ -103,9 +101,9 @@ for slice_nb in slices:
     else:
         miss_files_nb += 1
 
-
 if miss_files_nb != 0:
     sys.exit('%i missing files, analysis stopped'%miss_files_nb)
+
 
 # Combine and save estimates
 # --------------------------
@@ -116,12 +114,11 @@ for est_file in est_files:
     est = img_est.get_fdata()
     ests = ests + est
 
-
 # Save estimates data
-estfn = "{base_dir}/pp_data/{subject}/gauss/fit/{subject}_task-{task}_{preproc}_avg_est.nii.gz".format(
+estfn = "{base_dir}/pp_data/{subject}/gauss/fit/{subject}_task-pRF_space-{reg}_{preproc}_avg_est.nii.gz".format(
                                 base_dir = base_dir,
                                 subject = subject,
-                                task = task,
+                                reg = regist_type,
                                 preproc = preproc)
 
 new_img = nb.Nifti1Image(dataobj = ests, affine = img_data.affine, header = img_data.header)
@@ -130,11 +127,12 @@ new_img.to_filename(estfn)
 # Compute derived measures from prfs
 # ----------------------------------
 print('extracting pRF derivatives')
-outfn = "{base_dir}/pp_data/{subject}/gauss/fit/{subject}_task-{task}_{preproc}_deriv.nii.gz".format(
+outfn = "{base_dir}/pp_data/{subject}/gauss/fit/{subject}_task-pRF_space-{reg}_{preproc}_deriv.nii.gz".format(
                                 base_dir = base_dir,
                                 subject = subject,
-                                task = task,
+                                reg = regist_type,
                                 preproc = preproc)
+
 convert_fit_results(est_fn = estfn,
                     output_fn = outfn,
                     stim_width = analysis_info['stim_width'],

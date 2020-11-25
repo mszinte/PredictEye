@@ -237,7 +237,7 @@ def draw_cortex_vertex(subject,xfmname,data,cmap,vmin,vmax,description,cbar = 'd
     alpha = alpha*255.0
 
     # define volume RGB
-    
+
     volume = cortex.VolumeRGB(  channel1 = mat[...,0].T.astype(np.uint8),
                                 channel2 = mat[...,1].T.astype(np.uint8),
                                 channel3 = mat[...,2].T.astype(np.uint8),
@@ -257,6 +257,7 @@ def draw_cortex_vertex(subject,xfmname,data,cmap,vmin,vmax,description,cbar = 'd
                                     curvature_brightness = curv_brightness,
                                     curvature_contrast = curv_contrast)
 
+   
     if cbar == 'polar':
         
         base = cortex.utils.get_cmap(cmap)

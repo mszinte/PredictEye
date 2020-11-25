@@ -6,23 +6,23 @@ Goal of the script:
 Display cortical data with pycortex 
 -----------------------------------------------------------------------------------------
 Input(s):
-sys.argv[1]: subject name (e.g. 'sub-001')
-sys.argv[2]: task (ex: GazeCenterFS)
+sys.argv[1]: local mount of mesocentre disk (e.g. ~/disks/meso_S/)
+sys.argv[2]: subject name (e.g. 'sub-001')
 sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
-sys.argv[4]: save SVG (0  = No, 1 = Yes)
-sys.argv[5]: save timecourses
+sys.argv[4]: registration (e.g. T1w)
+sys.argv[5]: save SVG (0  = No, 1 = Yes)
+sys.argv[6]: save timecourses
 -----------------------------------------------------------------------------------------
 Output(s):
 pyxortex maps
 -----------------------------------------------------------------------------------------
 To run:
 >> cd to function
->> python post_fit/pycortex_maps.py [subject] [task] [preproc] [svg] [tc]
+>> python post_fit/pycortex_maps.py [mount] [subject] [preproc] [reg] [svg] [tc]
 -----------------------------------------------------------------------------------------
 Exemple:
-cd /Users/martin/disks/meso_H/projects/pRFgazeMod/mri_analysis/
-python post_fit/pycortex_maps.py sub-001 GazeCenterFS fmriprep_dct 0 0
-python post_fit/pycortex_maps.py sub-002 GazeCenterFS fmriprep_dct 0 0
+cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
+python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 fmriprep_dct T1w 0 0
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -56,13 +56,14 @@ from utils import draw_cortex_vertex, set_pycortex_config_file
 
 # Get inputs
 # ----------
-subject = sys.argv[1]
-task = sys.argv[2]
+mount_dir = sys.argv[1]
+subject = sys.argv[2]
 preproc = sys.argv[3]
-save_svg = int(sys.argv[4])
+regist_type = sys.argv[4]
+save_svg = int(sys.argv[5])
 if save_svg == 1: save_svg = True
 else: save_svg = False
-plot_tc = int(sys.argv[5])
+plot_tc = int(sys.argv[6])
 
 # Define analysis parameters
 # --------------------------
@@ -73,7 +74,7 @@ with open('settings.json') as f:
 # Define folder
 # -------------
 xfm_name = "identity.fmriprep"
-base_dir = analysis_info['base_dir_local']
+base_dir = "{mount_dir}/data/PredictEye".format(mount_dir = mount_dir)
 deriv_dir = "{base_dir}/pp_data/{subject}/gauss/fit".format(base_dir = base_dir,subject = subject)
 cortex_dir = "{base_dir}/pp_data/cortex/db/{subject}".format(base_dir = base_dir, subject = subject)
 fs_dir = "{base_dir}/deriv_data/fmriprep/freesurfer/".format(base_dir = base_dir)
@@ -99,9 +100,8 @@ print('save pycortex flatmaps')
 maps_names = []
 flatmaps_dir = opj(base_dir,"pp_data",subject,"gauss","pycortex_outputs","flatmaps")
 dataset_dir = opj(base_dir,"pp_data",subject,"gauss","pycortex_outputs","dataset")
-webviewer_dir = opj(base_dir,"pp_data",subject,"gauss","pycortex_outputs","webviewer","{subject}_{task}_{preproc}".format(subject = subject,
-                                                                                                                          task = task,
-                                                                                                                          preproc = preproc))
+webviewer_dir = opj(base_dir,"pp_data",subject,"gauss","pycortex_outputs","webviewer","{subject}_pRF_{reg}_{preproc}".format(
+                subject = subject,reg = regist_type,preproc = preproc))
 
 try:
     os.makedirs(flatmaps_dir)
@@ -111,14 +111,12 @@ except:
     pass
 
 # Load data
-deriv_mat_file = "{deriv_dir}/{subject}_task-{task}_{preproc}_deriv.nii.gz".format(deriv_dir = deriv_dir,
-                                                                                   subject = subject, 
-                                                                                   task = task, 
-                                                                                   preproc = preproc)
+deriv_mat_file = "{deriv_dir}/{subject}_task-pRF_space-{reg}_{preproc}_deriv.nii.gz".format(
+                  deriv_dir = deriv_dir,subject = subject, reg = regist_type, preproc = preproc)
 
 img_deriv_mat = nb.load(deriv_mat_file)
 deriv_mat = img_deriv_mat.get_fdata()
-    
+
 # R-square
 rsq_data = deriv_mat[...,rsq_idx]
 alpha = rsq_data
@@ -161,16 +159,15 @@ add_roi = False
 
 # Draw flatmaps
 volumes = {}
-
-
 for maps_name in maps_names:
-    roi_name = '{maps_name}_{task}_{preproc}'.format(maps_name = maps_name, task = task, preproc = preproc)
+
+    roi_name = '{maps_name}_{reg}_{preproc}'.format(maps_name = maps_name, reg = regist_type, preproc = preproc)
     roi_param = {'subject': subject, 'xfmname': xfm_name, 'roi_name': roi_name}
-    
+    print(roi_name)
     exec('param_{maps_name}.update(roi_param)'.format(maps_name = maps_name))
     exec('volume_{maps_name} = draw_cortex_vertex(**param_{maps_name})'.format(maps_name = maps_name))
     
-    exec('plt.savefig(opj(flatmaps_dir, "{maps_name}_{task}_{preproc}.pdf"),facecolor = "w")'.format(maps_name = maps_name, task = task, preproc = preproc))
+    exec('plt.savefig(opj(flatmaps_dir, "{maps_name}_task-pRF_space-{reg}_{preproc}.pdf"),facecolor = "w")'.format(maps_name = maps_name, reg = regist_type, preproc = preproc))
     plt.close()
     exec('vol_description = param_{maps_name}["description"]'.format(maps_name = maps_name))
     exec('volume = volume_{maps_name}'.format(maps_name = maps_name))
@@ -178,7 +175,7 @@ for maps_name in maps_names:
     
 print('save pycortex dataset')
 exec('dataset = cortex.Dataset(data = volumes)')
-exec('dataset_file = opj(dataset_dir, "{task}_{preproc}.hdf")'.format(task = task, preproc = preproc))
+exec('dataset_file = opj(dataset_dir, "task-pRF_space-{reg}_{preproc}.hdf")'.format(reg = regist_type, preproc = preproc))
     
     
 try: os.remove(dataset_file)
@@ -193,13 +190,13 @@ if plot_tc == 1:
 
     # load volume
     print('load: time course')
-    tc_file = "{base_dir}/pp_data/{subject}/func/{subject}_task-{task}_{preproc}_avg.nii.gz".format(base_dir = base_dir, subject = subject, task = task, preproc = preproc)
+    tc_file = "{base_dir}/pp_data/{subject}/func/{subject}_task-pRF_space-{reg}_{preproc}_avg.nii.gz".format(base_dir = base_dir, subject = subject, reg = regist_type, preproc = preproc)
     img_tc = nb.load(tc_file)
     tc = img_tc.get_fdata()
 
     # create directory
-    webviewer_dir = "{base_dir}/pp_data/{subject}/gauss/pycortex_outputs/webviewer/{subject}_{task}_{preproc}_tc/".format(
-                            base_dir = base_dir, subject = subject, task = task, preproc = preproc)
+    webviewer_dir = "{base_dir}/pp_data/{subject}/gauss/pycortex_outputs/webviewer/{subject}_task-pRF_space-{reg}_{preproc}_tc/".format(
+                            base_dir = base_dir, subject = subject, reg = regist_type, preproc = preproc)
 
     try:
         os.makedirs(webviewer_dir)
