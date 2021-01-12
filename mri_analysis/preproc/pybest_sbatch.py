@@ -10,6 +10,7 @@ sys.argv[1]: main project directory
 sys.argv[2]: project name (correspond to directory)
 sys.argv[3]: subject (e.g. sub-01)
 sys.argv[4]: server nb of hour to request (e.g 10)
+sys.argv[5]: email account
 -----------------------------------------------------------------------------------------
 Output(s):
 preprocessed files
@@ -19,10 +20,10 @@ To run:
 >> cd /home/mszinte/projects/PredictEye/mri_analysis/
 2. run python command
 python preproc/pybest_sbatch.py [main directory] [project name] [subject num] 
-					            [hour proc.] [DCT/savgol] [denoising]
+					            [hour proc.] [DCT/savgol] [denoising] [email account]
 -----------------------------------------------------------------------------------------
 Exemple:
-python preproc/pybest_sbatch.py /scratch/mszinte/data PredictEye sub-01 20
+python preproc/pybest_sbatch.py /scratch/mszinte/data PredictEye sub-01 20 martin.szinte
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -44,6 +45,7 @@ project_dir = sys.argv[2]
 subject = sys.argv[3]
 sub_num = subject[-2:]
 hour_proc = int(sys.argv[4])
+email_account = sys.argv[5]
 
 # Define cluster/server specific parameters
 cluster_name  = 'skylake'
@@ -57,7 +59,7 @@ slurm_cmd = """\
 #!/bin/bash
 #SBATCH --mail-type=ALL
 #SBATCH -p skylake
-#SBATCH --mail-user=martin.szinte@univ-amu.fr
+#SBATCH --mail-user={email_account}@univ-amu.fr
 #SBATCH -A {proj_name}
 #SBATCH --nodes=1
 #SBATCH --mem={memory_val}gb
