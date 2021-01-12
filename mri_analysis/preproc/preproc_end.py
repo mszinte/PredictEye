@@ -35,11 +35,11 @@ import json
 import sys
 import os
 import glob
-import ipdb
+#import ipdb
 import platform
 import numpy as np
 opj = os.path.join
-deb = ipdb.set_trace
+#deb = ipdb.set_trace
 
 sub_name = sys.argv[1]
 
@@ -59,8 +59,6 @@ base_dir = analysis_info['base_dir']
 
 # Copy files in pp_data folder
 # ----------------------------
-
-
 dest_folder1 = "{base_dir}/pp_data/{sub}/func/fmriprep_dct".format(base_dir = base_dir, sub = sub_name)
 try: os.makedirs(dest_folder1)
 except: pass
