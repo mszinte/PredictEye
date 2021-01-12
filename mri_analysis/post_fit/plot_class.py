@@ -519,8 +519,7 @@ class PlotOperator(object):
                                                 ('Eccentricity',        '@ecc{0.00} dva'),                          # eccentricity of hover tool
                                                 ('Size',                '@sigma{0.00} dva'),                        # size of hover tool
                                                 ('Baseline',            '@baseline{0.00}'),                         # baseline of hover tool
-                                                ('Amplitude',           '@beta{0.0000}'),                             # amplitude of hover tool
-                                                ('Non-linarity',        '@non_lin{0.00}'),                          # non-linearity of hover tool
+                                                ('Amplitude',           '@beta{0.0000}'),                           # amplitude of hover tool
                                                 ('Coverage',            '@cov{0.0}')]                               # coverage
         
         main_fig_hover                  =   HoverTool(                                                              # create hover tool
@@ -629,7 +628,6 @@ class PlotOperator(object):
                                                 ('Size',                '@sigma{0.00} dva'),                        # size of hover tool
                                                 ('Baseline',            '@baseline{0.00}'),                         # baseline of hover tool
                                                 ('Amplitude',           '@beta{0.0000}'),                           # amplitude of hover tool
-                                                ('Non-linarity',        '@non_lin{0.00}'),                          # non-linearity of hover tool
                                                 ('Coverage',            '@cov{0.0}')]                               # coverage
 
         main_fig_hover                  =   HoverTool(                                                              # create hover tool
@@ -696,14 +694,18 @@ class PlotOperator(object):
         dataMat                         =   self.dataMat
         smooth_factor                   =   self.smooth_factor
         
-        deg_x, deg_y                    =   np.meshgrid(np.linspace(self.x_range[0]*1.5, self.x_range[1]*1.5, (-self.x_range[0]*1.5+self.x_range[1]*1.5)*smooth_factor), 
-                                                        np.linspace(self.x_range[0]*1.5, self.x_range[1]*1.5, (-self.x_range[0]*1.5+self.x_range[1]*1.5)*smooth_factor))                     # define prfs in visual space
+        deg_x, deg_y                    =   np.meshgrid(np.linspace(self.x_range[0]*1.5, 
+                                                                    self.x_range[1]*1.5, 
+                                                                    int((-self.x_range[0]*1.5+self.x_range[1]*1.5)*smooth_factor)), 
+                                                        np.linspace(self.x_range[0]*1.5, 
+                                                                    self.x_range[1]*1.5, 
+                                                                    int((-self.x_range[0]*1.5+self.x_range[1]*1.5)*smooth_factor)))                     # define prfs in visual space
 
 
         pRFs                            =   generate_og_receptive_fields(                                           
-                                                                          dataMat[:,10].astype(np.float64),         # coordinate of the center x of the Gaussian
-                                                                          dataMat[:,11].astype(np.float64),         # coordinate of the center y of the Gaussian
-                                                                          dataMat[:,5].astype(np.float64),          # dispersion of the Gaussian
+                                                                          dataMat[:,8].astype(np.float64),         # coordinate of the center x of the Gaussian
+                                                                          dataMat[:,9].astype(np.float64),         # coordinate of the center y of the Gaussian
+                                                                          dataMat[:,4].astype(np.float64),          # dispersion of the Gaussian
                                                                           np.ones((dataMat.shape[0])),              # amplitude of the Gaussian
                                                                           deg_x,                                    # coordinate matrix along the horizontal dimension of the display (degrees)
                                                                           deg_y)                                    # coordinate matrix along the vertical dimension of the display (degrees)
@@ -747,9 +749,13 @@ class PlotOperator(object):
         main_fig.axis.minor_tick_out    =   0                                                                       # set minor tick out
         main_fig.axis.major_tick_in     =   0                                                                       # set major tick in
         main_fig.outline_line_alpha     =   0                                                                       # change alpha of box contour
-        
-        main_fig.yaxis.ticker           =   np.linspace(self.x_range[0], self.x_range[1], (-self.x_range[0]+self.x_range[1])/self.y_tick_steps+1)     # define y axis ticks
-        main_fig.xaxis.ticker           =   np.linspace(self.y_range[0], self.y_range[1], (-self.y_range[0]+self.y_range[1])/self.y_tick_steps+1)     # define y axis ticks
+
+        main_fig.yaxis.ticker           =   np.linspace(self.x_range[0], 
+                                                        self.x_range[1],
+                                                        int((-self.x_range[0]+self.x_range[1])/self.y_tick_steps+1))     # define y axis ticks
+        main_fig.xaxis.ticker           =   np.linspace(self.y_range[0], 
+                                                        self.y_range[1], 
+                                                        int((-self.y_range[0]+self.y_range[1])/self.y_tick_steps+1))     # define y axis ticks
 
         
         main_fig.background_fill_color  =   colors_val_leg[0]                                                       # define backgroud color
@@ -896,7 +902,7 @@ class PlotOperator(object):
         
 
         # get data
-        rsq_idx, polar_real_idx, polar_imag_idx, x_idx, hemi_idx = 1, 3, 4, 10, 12
+        rsq_idx, polar_real_idx, polar_imag_idx, x_idx, hemi_idx = 0, 2, 3, 8, 10
         dataMat = self.dataMat
         data = dataMat[~np.isnan(dataMat[:,rsq_idx]),:]
 
@@ -1239,8 +1245,8 @@ class PlotOperator(object):
         none
         -----------------------------------------------------------------------------------------
         """
-        sign_idx, rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-            non_lin_idx, amp_idx, baseline_idx, cov_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8,9,10,11
+        rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
+            amp_idx, baseline_idx, cov_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8,9
 
 
         # Time course - high parameter
@@ -1379,7 +1385,7 @@ class PlotOperator(object):
             high_param_map_fig.quad(bottom              =   -self.stim_height/2.0,                      # define bottom value
                                     left                =   -self.stim_width/2.0,                       # define left value
                                     top                 =   self.stim_height/2.0,                       # define top value
-                                    right               =   self.stim_height/2.0,                       # define right value
+                                    right               =   self.stim_width/2.0,                        # define right value
                                     color               =   self.stim_color)                            # define color
 
             # spans
@@ -1399,20 +1405,13 @@ class PlotOperator(object):
             x_text1 = self.x_range_map[0] + (self.x_range_map[1]-self.x_range_map[0])*0.05
             x_text2 = self.x_range_map[0] + (self.x_range_map[1]-self.x_range_map[0])*0.55
             y_text = self.y_range_map[1] - (self.y_range_map[1]-self.y_range_map[0])*0.025
-            if self.fit_model == 'gauss':
-                text1 = 'r2:     \t{:1.2f}\nEcc.: \t{:1.1f} dva\nCoord: \t[{:1.0f},{:1.0f},{:1.0f}]'.format(deriv_model_mat[rsq_idx],
-                                                                                                            deriv_model_mat[ecc_idx],
-                                                                                                            coord_mat[0],coord_mat[1],coord_mat[2])
-                text2 = 'Size: \t{:1.1f} dva\nCov.: \t{:1.0f} %'.format(deriv_model_mat[size_idx],
-                                                                        deriv_model_mat[cov_idx]*100)
 
-            elif self.fit_model == 'css':
-                text1 = 'r2:     \t{:1.2f}\nEcc.: \t{:1.1f} dva\nCoord: \t[{:1.0f},{:1.0f},{:1.0f}]'.format(deriv_model_mat[rsq_idx],
-                                                                                                            deriv_model_mat[ecc_idx],
-                                                                                                            coord_mat[0],coord_mat[1],coord_mat[2])
-                text2 = 'n:    \t{:1.1f}\nCov.: \t{:1.0f} %\nSize: \t{:1.1f} dva'.format( deriv_model_mat[non_lin_idx],
-                                                                                          deriv_model_mat[cov_idx]*100,
-                                                                                          deriv_model_mat[size_idx])
+            text1 = 'r2:     \t{:1.2f}\nEcc.: \t{:1.1f} dva\nCoord: \t[{:1.0f},{:1.0f},{:1.0f}]'.format(deriv_model_mat[rsq_idx],
+                                                                                                        deriv_model_mat[ecc_idx],
+                                                                                                        coord_mat[0],coord_mat[1],coord_mat[2])
+            text2 = 'Size: \t{:1.1f} dva\nCov.: \t{:1.0f} %'.format(deriv_model_mat[size_idx],
+                                                                    deriv_model_mat[cov_idx]*100)
+
 
             high_param_map_fig.text(x=x_text1,y=y_text,text = [text1],text_font_size = '8pt',text_baseline = 'top')
             high_param_map_fig.text(x=x_text2,y=y_text,text = [text2],text_font_size = '8pt',text_baseline = 'top')
@@ -1550,7 +1549,7 @@ class PlotOperator(object):
             low_param_map_fig.quad(bottom              =   -self.stim_height/2.0,                      # define bottom value
                                     left                =   -self.stim_width/2.0,                       # define left value
                                     top                 =   self.stim_height/2.0,                       # define top value
-                                    right               =   self.stim_height/2.0,                       # define right value
+                                    right               =   self.stim_width/2.0,                       # define right value
                                     color               =   self.stim_color)                            # define color
 
             # spans
@@ -1573,20 +1572,12 @@ class PlotOperator(object):
             x_text1 = self.x_range_map[0] + (self.x_range_map[1]-self.x_range_map[0])*0.05
             x_text2 = self.x_range_map[0] + (self.x_range_map[1]-self.x_range_map[0])*0.55
             y_text = self.y_range_map[1] - (self.y_range_map[1]-self.y_range_map[0])*0.025
-            if self.fit_model == 'gauss':
-                text1 = 'r2:     \t{:1.2f}\nEcc.: \t{:1.1f} dva\nCoord: \t[{:1.0f},{:1.0f},{:1.0f}]'.format(deriv_model_mat[rsq_idx],
-                                                                                                            deriv_model_mat[ecc_idx],
-                                                                                                            coord_mat[0],coord_mat[1],coord_mat[2])
-                text2 = 'Size: \t{:1.1f} dva\nCov.: \t{:1.0f} %'.format(deriv_model_mat[size_idx],
-                                                                        deriv_model_mat[cov_idx]*100)
 
-            elif self.fit_model == 'css':
-                text1 = 'r2:     \t{:1.2f}\nEcc.: \t{:1.1f} dva\nCoord: \t[{:1.0f},{:1.0f},{:1.0f}]'.format(deriv_model_mat[rsq_idx],
-                                                                                                            deriv_model_mat[ecc_idx],
-                                                                                                            coord_mat[0],coord_mat[1],coord_mat[2])
-                text2 = 'n:    \t{:1.1f}\nCov.: \t{:1.0f} %\nSize: \t{:1.1f} dva'.format( deriv_model_mat[non_lin_idx],
-                                                                                          deriv_model_mat[cov_idx]*100,
-                                                                                          deriv_model_mat[size_idx])
+            text1 = 'r2:     \t{:1.2f}\nEcc.: \t{:1.1f} dva\nCoord: \t[{:1.0f},{:1.0f},{:1.0f}]'.format(deriv_model_mat[rsq_idx],
+                                                                                                        deriv_model_mat[ecc_idx],
+                                                                                                        coord_mat[0],coord_mat[1],coord_mat[2])
+            text2 = 'Size: \t{:1.1f} dva\nCov.: \t{:1.0f} %'.format(deriv_model_mat[size_idx],
+                                                                    deriv_model_mat[cov_idx]*100)
 
             low_param_map_fig.text(x=x_text1,y=y_text,text = [text1],text_font_size = '8pt',text_baseline = 'top')
             low_param_map_fig.text(x=x_text2,y=y_text,text = [text2],text_font_size = '8pt',text_baseline = 'top')

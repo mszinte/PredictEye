@@ -35,7 +35,8 @@ the ocumotor system.<br/>
 9. Flatten hemispheres with preproc/flatten_sbatch.py<br/>
 10. Import in pycortex with preproc/pycortex_import.py<br/>
 11. run pybest (modified to save niftis) to high pass filter and denoised the data with /preproc/pybest_sbatch.py<br/>
-12. Save time courses as pycortex webviewer<br/>
+12. copy files in pp_data and average task runs together with /preproc/preproc_end.py
+13. [optional] Save time courses as pycortex webviewer with preproc/save_tc.py<br/>
 
 
 ## behav_analysis

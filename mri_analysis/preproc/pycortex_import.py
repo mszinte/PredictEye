@@ -83,8 +83,9 @@ except: pass
 
 # Add transform to pycortex db
 # ----------------------------
-file_list = sorted(glob.glob("{base_dir}/bids_data/{sub}/ses-01/func/*_bold.nii.gz".format(base_dir = base_dir, sub = subject)))
+file_list = sorted(glob.glob("{base_dir}/pp_data/{sub}/func/*.nii.gz".format(base_dir = base_dir, sub = subject)))
 ref_file = file_list[0]
+ 
 transform = cortex.xfm.Transform(np.identity(4), ref_file)
 transform.save(subject, xfm_name, 'magnet')
 

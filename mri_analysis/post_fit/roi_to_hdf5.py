@@ -3,19 +3,25 @@
 roi_to_hdf5.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Create roi-masks and save all deriv, tc and coord in hdf5 format
+Create roi-masks and save derivatives, tc and coord in hdf5 format
 -----------------------------------------------------------------------------------------
 Input(s):
-sys.argv[1]: subject name (e.g. 'sub-01')
-sys.argv[2]: acquisition ('acq-2p5mm','acq-2mm')
-sys.argv[3]: fit model (e.g. 'gauss')
+sys.argv[1]: subject name (e.g. 'sub-001')
+sys.argv[2]: task (ex: GazeCenterFS)
+sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
 -----------------------------------------------------------------------------------------
 Output(s):
-hdf5 files
+h5 file per rois
 -----------------------------------------------------------------------------------------
 To run:
-cd /home/mszinte/projects/pRFseqTest/mri_analysis/
-python post_fit/roi_to_hdf5.py sub-01 acq-2p5mm gauss
+>> cd to function
+>> python post_fit/roi_to_hdf5.py [subject] [task] [preproc]
+-----------------------------------------------------------------------------------------
+Exemple:
+cd /home/mszinte/projects/pRFgazeMod/mri_analysis/
+python post_fit/roi_to_hdf5.py sub-001 GazeCenterFS fmriprep_dct
+-----------------------------------------------------------------------------------------
+Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
 """
 
@@ -34,22 +40,24 @@ deb = ipdb.set_trace
 
 # MRI imports
 # -----------
+from prfpy.rf import *
+from prfpy.timecourse import *
+from prfpy.stimulus import PRFStimulus2D
+from prfpy.model import Iso2DGaussianModel
+from prfpy.fit import Iso2DGaussianFitter
 import nibabel as nb
 import cortex
 
 # Function import
 # ---------------
 from utils import set_pycortex_config_file, mask_nifti_2_hdf5
-import popeye.utilities as utils
-from popeye.visual_stimulus import VisualStimulus
-import popeye.css_neg as css
-import popeye.og_neg as og
 
 # Get inputs
 # ----------
 subject = sys.argv[1]
-acq = sys.argv[2]
-fit_model = sys.argv[3]
+task = sys.argv[2]
+preproc = sys.argv[3]
+
 
 # Define analysis parameters
 # --------------------------
@@ -62,35 +70,27 @@ with open('settings.json') as f:
 base_dir = analysis_info['base_dir']
 prf_signs = analysis_info['prf_signs']
 cortex_dir = "{base_dir}/pp_data/cortex/db/{subject}".format(base_dir = base_dir, subject = subject)
-rois_mask_dir = "{base_dir}/pp_data/{subject}/{fit_model}/masks".format(base_dir = base_dir, subject = subject, fit_model = fit_model)
-h5_dir = "{base_dir}/pp_data/{subject}/{fit_model}/h5".format(base_dir = base_dir, subject = subject, fit_model = fit_model)
-deriv_dir = "{base_dir}/pp_data/{subject}/{fit_model}/deriv".format(base_dir = base_dir, subject = subject, fit_model = fit_model)
-xfm_name = "identity.{acq}".format(acq = acq)
+rois_mask_dir = "{base_dir}/pp_data/{subject}/gauss/masks".format(base_dir = base_dir, subject = subject)
+h5_dir = "{base_dir}/pp_data/{subject}/gauss/h5".format(base_dir = base_dir, subject = subject)
+deriv_dir = "{base_dir}/pp_data/{subject}/gauss/fit".format(base_dir = base_dir, subject = subject)
+xfm_name = "identity.fmriprep"
 rois = analysis_info['rois']
 cortical_mask = analysis_info['cortical_mask']
 
+# Define visual design & model
+# ----------------------------
 
-# Define visual design
-# --------------------
-visual_dm_file = scipy.io.loadmat(opj(base_dir,'pp_data','visual_dm','vis_design.mat'))
-visual_dm = visual_dm_file['stim']
-stimulus = VisualStimulus(  stim_arr = visual_dm,
-                            viewing_distance = analysis_info["screen_distance"],
-                            screen_width = analysis_info["screen_width"],
-                            scale_factor = 1/10.0,
-                            tr_length = analysis_info["TR"],
-                            dtype = np.short)
+# Create stimulus design (create in matlab - see others/make_visual_dm.m)
+visual_dm_file = scipy.io.loadmat(opj(base_dir,'pp_data','visual_dm',"{task}_vd.mat".format(task = task)))
+visual_dm = visual_dm_file['stim'].transpose([1,0,2])
 
-if fit_model == 'gauss':
-    fit_func = og.GaussianFit
-    model_func = og.GaussianModel(  stimulus = stimulus,
-                                    hrf_model = utils.spm_hrf)
-elif fit_model == 'css':
-    fit_func = css.CompressiveSpatialSummationFit
-    model_func = css.CompressiveSpatialSummationModel(  stimulus = stimulus,
-                                                        hrf_model = utils.spm_hrf)
+stimulus = PRFStimulus2D(screen_width_cm = analysis_info['screen_width'],
+                         screen_height_cm = analysis_info['screen_height'],
+                         screen_distance_cm = analysis_info['screen_distance'],
+                         design_matrix = visual_dm,
+                         TR = analysis_info['TR'])
 
-model_func.hrf_delay = 0
+gauss_model = Iso2DGaussianModel(stimulus = stimulus)
 
 # Set pycortex db and colormaps
 # -----------------------------
@@ -104,40 +104,48 @@ try: os.makedirs(rois_mask_dir)
 except: pass
 
 for roi in rois:
-	print('creating {roi} {cortical_mask} mask'.format(roi = roi, cortical_mask = cortical_mask))
-	roi_mask = cortex.utils.get_roi_masks(subject = subject, xfmname = xfm_name, gm_sampler = cortical_mask, roi_list = roi, return_dict = True, split_lr = True)
-	for hemi in ['L','R']:
-		roi_mask_img = nb.Nifti1Image(dataobj = roi_mask['{roi}_{hemi}'.format(roi = roi, hemi = hemi)].transpose((2,1,0)), affine = ref_img.affine, header = ref_img.header)
-		roi_mask_file = "{rois_mask_dir}/{roi}_{cortical_mask}_{acq}_{hemi}.nii.gz".format(rois_mask_dir = rois_mask_dir, roi = roi, cortical_mask = cortical_mask, acq = acq, hemi = hemi)
-		roi_mask_img.to_filename(roi_mask_file)
+    roi_mask_file_L = "{rois_mask_dir}/{roi}_{cortical_mask}_L.nii.gz".format(rois_mask_dir = rois_mask_dir, roi = roi, cortical_mask = cortical_mask)
+    if os.path.getsize(roi_mask_file_L) != 0:
+        continue
+    else:
+        print('creating {roi} {cortical_mask} mask'.format(roi = roi, cortical_mask = cortical_mask))
+        roi_mask = cortex.utils.get_roi_masks(subject = subject, xfmname = xfm_name, gm_sampler = cortical_mask, roi_list = roi, return_dict = True, split_lr = True)
+        for hemi in ['L','R']:
+            roi_mask_file = "{rois_mask_dir}/{roi}_{cortical_mask}_{hemi}.nii.gz".format(rois_mask_dir = rois_mask_dir, roi = roi, cortical_mask = cortical_mask, hemi = hemi)
+            roi_mask_img = nb.Nifti1Image(dataobj = roi_mask['{roi}_{hemi}'.format(roi = roi, hemi = hemi)].transpose((2,1,0)), affine = ref_img.affine, header = ref_img.header)
+            roi_mask_img.to_filename(roi_mask_file)
+
 
 # Create HDF5 files
 # -----------------
 try: os.makedirs(h5_dir)
 except: pass
 
-tc_file = "{base_dir}/pp_data/{subject}/func/{subject}_task-AttendStim_{acq}_fmriprep_sg_psc_avg.nii.gz".format(base_dir = base_dir, subject = subject, acq = acq)
+tc_file = "{base_dir}/pp_data/{subject}/func/{subject}_task-{task}_{preproc}_avg.nii.gz".format(base_dir = base_dir, subject = subject, task = task, preproc = preproc)
 for roi in rois:
-	print('creating {roi} h5 files (deriv, tc, tc_model)'.format(roi = roi))
+    print('creating {roi} {task} {preproc} h5 files (deriv, tc, tc_model)'.format(roi = roi, task = task, preproc = preproc))
 
-	h5_file = "{h5_dir}/{roi}_{acq}.h5".format(h5_dir = h5_dir, roi = roi, acq = acq)
-	
-	try: os.system('rm {h5_file}'.format(h5_file = h5_file))
-	except: pass
+    h5_file = "{h5_dir}/{roi}_{task}_{preproc}.h5".format(h5_dir = h5_dir, roi = roi, task = task, preproc = preproc)
 
-	mask_file_L = "{rois_mask_dir}/{roi}_{cortical_mask}_{acq}_L.nii.gz".format(rois_mask_dir = rois_mask_dir, roi = roi, cortical_mask = cortical_mask, acq = acq)
-	mask_file_R = "{rois_mask_dir}/{roi}_{cortical_mask}_{acq}_R.nii.gz".format(rois_mask_dir = rois_mask_dir, roi = roi, cortical_mask = cortical_mask, acq = acq)
-	
-	for prf_sign in prf_signs:
+    try: os.system('rm {h5_file}'.format(h5_file = h5_file))
+    except: pass
 
-		deriv_file = "{deriv_dir}/{prf_sign}/prf_deriv_{acq}_{prf_sign}.nii.gz".format(deriv_dir = deriv_dir,acq = acq, prf_sign = prf_sign)
+    mask_file_L = "{rois_mask_dir}/{roi}_{cortical_mask}_L.nii.gz".format(rois_mask_dir = rois_mask_dir, roi = roi, cortical_mask = cortical_mask)
+    mask_file_R = "{rois_mask_dir}/{roi}_{cortical_mask}_R.nii.gz".format(rois_mask_dir = rois_mask_dir, roi = roi, cortical_mask = cortical_mask)
+    
+    outfn = "{base_dir}/pp_data/{subject}/gauss/fit/{subject}_task-{task}_{preproc}_deriv.nii.gz".format(
+                                base_dir = base_dir,
+                                subject = subject,
+                                task = task,
+                                preproc = preproc)
 
-		mask_nifti_2_hdf5(	deriv_file = deriv_file,
-					 		tc_file = tc_file,
-							mask_file_L = mask_file_L,
-							mask_file_R = mask_file_R,
-							hdf5_file = h5_file,
-							folder_alias = prf_sign,
-							model_func = model_func,
-							)
-		
+    deriv_file = "{deriv_dir}/{subject}_task-{task}_{preproc}_deriv.nii.gz".format(deriv_dir = deriv_dir,subject = subject, task = task, preproc = preproc)
+
+    mask_nifti_2_hdf5(deriv_file = deriv_file,
+                      tc_file = tc_file,
+                      mask_file_L = mask_file_L,
+                      mask_file_R = mask_file_R,
+                      hdf5_file = h5_file,
+                      model = gauss_model,
+                      folder_alias = 'pRF')
+
