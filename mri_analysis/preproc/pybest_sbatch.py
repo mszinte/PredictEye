@@ -71,7 +71,7 @@ slurm_cmd = """\
 #SBATCH -o {log_dir}/{subject}_pybest_%N_%j_%a.out
 #SBATCH -J {subject}_pybest
 #SBATCH --mail-type=BEGIN,END\n\n""".format(proj_name = proj_name, nb_procs = nb_procs, hour_proc = hour_proc, 
-											subject = subject, memory_val = memory_val, log_dir = log_dir)
+											subject = subject, memory_val = memory_val, log_dir = log_dir, email_account = email_account)
 
 # define pybest cmd
 fmriprep_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/fmriprep/".format(main_dir = main_dir,project_dir = project_dir)
