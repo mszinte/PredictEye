@@ -31,11 +31,11 @@ Written by Martin Szinte (martin.szinte@gmail.com)
 
 # imports modules
 import os
-import ipdb
+#import ipdb
 import sys
 import json
 opj = os.path.join
-deb = ipdb.set_trace
+#deb = ipdb.set_trace
 
 # inputs
 main_dir = sys.argv[1]

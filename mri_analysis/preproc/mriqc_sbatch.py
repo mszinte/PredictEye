@@ -33,9 +33,9 @@ Written by Martin Szinte (martin.szinte@gmail.com)
 import sys
 import os
 import time
-import ipdb
+#import ipdb
 opj = os.path.join
-deb = ipdb.set_trace
+#deb = ipdb.set_trace
 
 # inputs
 singularity_dir = '/scratch/mszinte/softwares/mriqc-0.15.1.simg'
