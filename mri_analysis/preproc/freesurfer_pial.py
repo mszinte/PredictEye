@@ -66,7 +66,7 @@ slurm_cmd = """\
 #SBATCH -o {log_dir}/{subject}_freesurfer-pial_%N_%j_%a.out
 #SBATCH -J {subject}_freesurfer-pial
 #SBATCH --mail-type=BEGIN,END\n\n""".format(nb_procs = nb_procs, hour_proc = hour_proc, subject = subject,
-											memory_val = memory_val, log_dir = log_dir, proj_name = proj_name)
+											memory_val = memory_val, log_dir = log_dir, proj_name = proj_name, email_account = email_account)
 
 # define subject directory
 fs_dir = "{main_dir}{project_dir}/deriv_data/fmriprep/freesurfer/".format(main_dir = main_dir, project_dir = project_dir)
