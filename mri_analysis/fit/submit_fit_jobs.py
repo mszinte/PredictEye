@@ -40,9 +40,9 @@ import json
 import sys
 import nibabel as nb
 import platform
-import ipdb
+# import ipdb
 import datetime
-deb = ipdb.set_trace
+# deb = ipdb.set_trace
 opj = os.path.join
 
 # Settings
@@ -161,4 +161,5 @@ for slice_nb in slices:
     # Submit jobs
     print("Submitting {sh_dir} to queue".format(sh_dir = sh_dir))
     os.system("{sub_command} {sh_dir}".format(sub_command = sub_command, sh_dir = sh_dir))
+    
     

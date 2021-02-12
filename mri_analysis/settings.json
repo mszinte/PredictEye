@@ -25,7 +25,7 @@
     "fit_steps":6,
     "xfm_masks":["cortical", "thick", "thin", "nearest"],
     "cortical_mask": "cortical",
-    "rois": ["V1","V2","V3","V3A","V3B","LO","VO","hMT+","iIPS","sIPS","iPCS","sPCS","mPCS"],
+    "rois": ["V1","V2","V3","V3AB","LO","VO","hMT+","iIPS","sIPS","iPCS","sPCS","mPCS"],
     "ecc_th": [0.1,15.0],
     "size_th": [0.1,15.0],
     "rsqr_th": 0.0,

@@ -17,7 +17,6 @@ python preproc/pycortex_import.py sub-01
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
-
 """
 
 # Stop warnings
@@ -38,7 +37,7 @@ opj = os.path.join
 deb = pdb.set_trace
 
 # MRI imports
-# -----------
+# ----------d-
 import cortex
 from cortex.fmriprep import *
 import nibabel as nb

@@ -173,14 +173,7 @@ for maps_name in maps_names:
     exec('volume = volume_{maps_name}'.format(maps_name = maps_name))
     volumes.update({vol_description:volume})
     
-print('save pycortex dataset')
-exec('dataset = cortex.Dataset(data = volumes)')
-exec('dataset_file = opj(dataset_dir, "task-pRF_space-{reg}_{preproc}.hdf")'.format(reg = regist_type, preproc = preproc))
-    
-    
-try: os.remove(dataset_file)
-except: pass
-dataset.save(dataset_file)
+
 print('save pycortex webviewer')
 cortex.webgl.make_static(outpath = webviewer_dir, data = volumes)
 
@@ -209,11 +202,6 @@ if plot_tc == 1:
                               xfmname = xfm_name,
                               cmap = 'BuBkRd',
                               description = 'BOLD')
-
-    # create dataset
-    print('save pycortex dataset: time course')
-    dataset_tc = cortex.Dataset(data = volume_tc)
-    dataset_tc.save("{dataset_dir}_tc.hdf".format(dataset_dir = dataset_dir))
 
     # create webgl
     print('save pycortex webviewer: time course')

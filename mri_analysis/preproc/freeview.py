@@ -49,7 +49,6 @@ x_start = int(sys.argv[4])
 x_end = int(sys.argv[5])
 expl = sys.argv[6]
 
-
 # define directory
 fs_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/freesurfer/{subject}".format(main_dir = main_dir, project_dir = project_dir, subject = subject)
 bids_dir = "{main_dir}/{project_dir}/bids_data/{subject}".format(main_dir = main_dir, project_dir = project_dir, subject = subject)

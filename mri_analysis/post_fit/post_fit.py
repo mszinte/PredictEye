@@ -38,10 +38,8 @@ import sys
 import json
 import glob
 import numpy as np
-import ipdb
 import platform
 opj = os.path.join
-deb = ipdb.set_trace
 
 # MRI imports
 # -----------
