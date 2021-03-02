@@ -461,13 +461,13 @@ class PlotOperator(object):
         
         return main_fig, main_source, data_source, data_source_sample
 
-    def draw_pRFmap(self, params, old_main_fig =[]):
+    def draw_map(self, params, old_main_fig =[]):
         """
         -----------------------------------------------------------------------------------------
-        draw_pRFmap(self, params,old_main_fig =[])
+        draw_map(self, params,old_main_fig =[])
         -----------------------------------------------------------------------------------------
         Goal of the script:
-        Create a graph with pRF position and size as well as side historgrams
+        Create a graph with pRF/pMF position and size as well as side historgrams
         -----------------------------------------------------------------------------------------
         Input(s):
         params: dict containing a set of parameters for the figure
@@ -482,7 +482,7 @@ class PlotOperator(object):
         main_fig,main_source,data_source,main_source_sample = \
                                             self.initialize_main_fig(old_main_fig)
 
-        # plot pRF stim
+        # plot stim
         _                               =   main_fig.quad(  
                                                 bottom              =   -self.stim_height/2.0,                      # define bottom value
                                                 left                =   -self.stim_width/2.0,                       # define left value
@@ -544,34 +544,17 @@ class PlotOperator(object):
         f                               =   column(                                                                 # define figures coluns
                                                 row(h_hist,   leg),              # define figure first row
                                                 row(main_fig, v_hist))                                              # define figure second row
-        
-        # save in svg
-        # -----------
-        if self.save_svg == 1:
-            from bokeh.io import export_svgs
-            import os
-            opj = os.path.join
-                  
-            try:   os.makedirs(opj(self.svg_folder,self.svg_filename))
-            except: pass
-        
-            fig_dict = {'h_hist': h_hist, 'leg': leg, 'main_fig':main_fig, 'v_hist':v_hist}
-            # save figure
-            for fig in fig_dict:
-                fig_dict[fig].output_backend = 'svg'
-                output_file_svg = opj(self.svg_folder,self.svg_filename,"{svg_filename}_{fig}.svg".format(svg_filename = self.svg_filename, fig = fig))
-                export_svgs(fig_dict[fig], filename = output_file_svg)
 
 
         return (f,main_fig)
 
-    def draw_pRFecc(self, params, old_main_fig =[]):
+    def draw_ecc(self, params, old_main_fig =[]):
         """
         -----------------------------------------------------------------------------------------
-        draw_pRFecc(self.params,old_main_fig =[])
+        draw_ecc(self.params,old_main_fig =[])
         -----------------------------------------------------------------------------------------
         Goal of the script:
-        Create a graph with pRF eccentricity as a function of ...
+        Create a graph with pRF/pMF eccentricity as a function of ...
         -----------------------------------------------------------------------------------------
         Input(s):
         self.params: dict containing a set of parameters for the figure
@@ -651,33 +634,16 @@ class PlotOperator(object):
                                                 row(h_hist,   leg),              # define figure first row
                                                 row(main_fig, v_hist))                                              # define figure second row
 
-        
-        # save in svg
-        # -----------
-        if self.save_svg == 1:
-            from bokeh.io import export_svgs
-            import os
-            opj = os.path.join
-                  
-            try:   os.makedirs(opj(self.svg_folder,self.svg_subfolder,self.svg_filename))
-            except: pass
-        
-            fig_dict = {'h_hist': h_hist, 'leg': leg, 'main_fig':main_fig, 'v_hist':v_hist}
-            # save figure
-            for fig in fig_dict:
-                fig_dict[fig].output_backend = 'svg'
-                output_file_svg = opj(self.svg_folder,self.svg_subfolder,self.svg_filename,"{svg_filename}_{fig}.svg".format(svg_filename = self.svg_filename, fig = fig))
-                export_svgs(fig_dict[fig], filename = output_file_svg)
 
         return (f,main_fig)
 
-    def draw_pRFcov(self, params, old_main_fig =[]):
+    def draw_cov(self, params, old_main_fig =[]):
         """
         -----------------------------------------------------------------------------------------
-        draw_pRFcov(params,old_main_fig =[])
+        draw_cov(params,old_main_fig =[])
         -----------------------------------------------------------------------------------------
         Goal of the script:
-        Create a graph with pRF position and size as well as side historgrams
+        Create a graph with pRF/pMF coverage
         -----------------------------------------------------------------------------------------
         Input(s):
         params: dict containing a set of parameters for the figure
@@ -846,35 +812,17 @@ class PlotOperator(object):
                                                 row(s1, s2),                                                        # define figure second row
                                                 row(main_fig, colorbar_fig))                                        # define figure second row
 
-
-        # save in svg
-        # -----------
-        if self.save_svg == 1:
-            from bokeh.io import export_svgs
-            import os
-            opj = os.path.join
-                  
-            try:   os.makedirs(opj(self.svg_folder,self.svg_filename))
-            except: pass
-        
-            fig_dict = {'main_fig': main_fig, 'colorbar_fig': colorbar_fig}
-            # save figure
-            for fig in fig_dict:
-                fig_dict[fig].output_backend = 'svg'
-                output_file_svg = opj(self.svg_folder,self.svg_filename,"{svg_filename}_{fig}.svg".format(svg_filename = self.svg_filename, fig = fig))
-                export_svgs(fig_dict[fig], filename = output_file_svg)
-
         return (f,main_fig)
 
     
 
-    def draw_pRFlat(self, params, old_main_fig =[]):
+    def draw_lat(self, params, old_main_fig =[]):
         """
         -----------------------------------------------------------------------------------------
-        draw_pRFlat(params,old_main_fig =[])
+        draw_lat(params,old_main_fig =[])
         -----------------------------------------------------------------------------------------
         Goal of the script:
-        Create a graph with pRF laterality index
+        Create a graph with pRF/pMF laterality index
         -----------------------------------------------------------------------------------------
         Input(s):
         params: dict containing a set of parameters for the figure
@@ -1208,34 +1156,18 @@ class PlotOperator(object):
         f                               =   column(                                                                 # define figures coluns
                                                 row(main_fig))                                                  # define figure second row
 
-        # save in svg
-        # -----------
-        if self.save_svg == 1:
-            from bokeh.io import export_svgs
-            import os
-            opj = os.path.join
-                  
-            try:   os.makedirs(opj(self.svg_folder,self.svg_filename))
-            except: pass
         
-            fig_dict = {'main_fig': main_fig}
-            # save figure
-            for fig in fig_dict:
-                fig_dict[fig].output_backend = 'svg'
-                output_file_svg = opj(self.svg_folder,self.svg_filename,"{svg_filename}_{fig}.svg".format(svg_filename = self.svg_filename, fig = fig))
-                export_svgs(fig_dict[fig], filename = output_file_svg)
-
         return (f,main_fig)
 
     
 
-    def draw_pRFtc(self, params):
+    def draw_tc(self, params):
         """
         -----------------------------------------------------------------------------------------
-        draw_pRFtc(self, params)
+        draw_tc(self, params)
         -----------------------------------------------------------------------------------------
         Goal of the script:
-        Create a graph with pRF timecourse
+        Create a graph with timecourses
         -----------------------------------------------------------------------------------------
         Input(s):
         params: dict containing a set of parameters for the figure
@@ -1321,8 +1253,8 @@ class PlotOperator(object):
             high_param_tc_plot_model = high_param_tc_fig.line(x = 'x_model', y = 'y_model', line_width = 2, line_color = self.model_line_color, source = high_param_tc_source, legend = "model")
 
             # data hover
-            high_param_tc_fig_tooltips = [  ('data: ',  ' @x_data{0} s, @y_data{0.0} %'),
-                                            ('model: ',  '@x_model{0} s, @y_model{0.0} %')
+            high_param_tc_fig_tooltips = [  ('data: ',  ' @x_data{0} s, z = @y_data{0.0}'),
+                                            ('model: ',  '@x_model{0} s, z = @y_model{0.0}')
                                         ]                               # coverage
             high_param_tc_fig_hover = HoverTool(tooltips = high_param_tc_fig_tooltips,
                                                 mode = 'vline',
@@ -1351,7 +1283,7 @@ class PlotOperator(object):
         text = '{val_r2} r2 + High {params}: {title}'.format(val_r2 = self.r2_level, params = self.params,title = self.title)
         high_param_tc_fig.text(x=x_text,y=y_text,text = [text],text_font_size = '8pt',text_font_style = 'bold')
 
-        # pRF map - low parameter
+        # map - low parameter
         # -----------------------
         high_param_map_fig              =   figure(
                                                 plot_width          =   int(self.p_height/2),
@@ -1515,7 +1447,7 @@ class PlotOperator(object):
         text = '{val_r2} r2 + Low {params}: {title}'.format(val_r2 = self.r2_level, params = self.params,title = self.title)
         low_param_tc_fig.text(x=x_text,y=y_text,text = [text],text_font_size = '8pt',text_font_style = 'bold')
 
-        # pRF map - low parameter
+        # map - low parameter
         # -----------------------
         low_param_map_fig              =   figure(                                                                  # create a figure in bokeh
                                                 plot_width          =   int(self.p_height/2),                            # define figure width in pixel
@@ -1632,28 +1564,6 @@ class PlotOperator(object):
                         row(low_param_tc_fig,low_param_map_fig))
         main_fig = high_param_tc_fig
 
-        # save in svg
-        # -----------
-        if self.save_svg == 1:
-            from bokeh.io import export_svgs
-            import os
-            import time
-            opj = os.path.join
-                  
-            try: os.makedirs(opj(self.svg_folder,self.svg_subfolder,self.svg_filename))
-            except: pass
-
-            fig_dict = {'time_leg_fig': time_leg_fig, 'high_param_tc_fig': high_param_tc_fig, 'high_param_map_fig':high_param_map_fig,
-                        'low_param_tc_fig': low_param_tc_fig, 'low_param_map_fig': low_param_map_fig}
-
-            # save figure
-            for fig in fig_dict:
-                fig_dict[fig].output_backend = 'svg'
-                output_file_svg = opj(self.svg_folder,self.svg_subfolder,self.svg_filename,"{svg_filename}_{fig}.svg".format(svg_filename = self.svg_filename, fig = fig))
-                
-                try: export_svgs(fig_dict[fig], filename = output_file_svg)
-                except: pass
-
         return (f,main_fig)
 
     def draw_figure(self, parameters, plot, old_main_fig = []):
@@ -1667,14 +1577,14 @@ class PlotOperator(object):
             setattr(self, k, v)
         
         if plot == 'map':
-            f, main_fig = self.draw_pRFmap(params = parameters, old_main_fig = old_main_fig)
+            f, main_fig = self.draw_map(params = parameters, old_main_fig = old_main_fig)
         elif plot == 'ecc':
-            f, main_fig = self.draw_pRFecc(params = parameters, old_main_fig = old_main_fig)
+            f, main_fig = self.draw_ecc(params = parameters, old_main_fig = old_main_fig)
         elif plot == 'cov':
-            f, main_fig = self.draw_pRFcov(params = parameters, old_main_fig = old_main_fig)
+            f, main_fig = self.draw_cov(params = parameters, old_main_fig = old_main_fig)
         elif plot == 'lat':
-            f, main_fig = self.draw_pRFlat(params = parameters, old_main_fig = old_main_fig)
+            f, main_fig = self.draw_lat(params = parameters, old_main_fig = old_main_fig)
         elif plot == 'tc':
-            f, main_fig = self.draw_pRFtc(params = parameters)
+            f, main_fig = self.draw_tc(params = parameters)
         
         return (f, main_fig)

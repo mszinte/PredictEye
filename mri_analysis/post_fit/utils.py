@@ -52,23 +52,20 @@ def set_pycortex_config_file(data_folder):
 
 
 
-def convert_fit_results(est_fn,
-                        output_fn,
-                        stim_width,
-                        stim_height):
+def convert_fit_results(est_fn, output_fn, task, stim_width, stim_height):
     """
-    Convert pRF fitting value in different parameters for following analysis
+    Convert pRF or pMF fitting value in different parameters for following analysis
    
     Parameters
     ----------
     est_fn: absolute paths to estimates file
     output_fn: absolute path to derivative file
-    stim_width: stimulus width in deg
-    stim_heigth: stimulus height in deg
+    stim_width: stimulus width in deg [for pRF only]
+    stim_heigth: stimulus height in deg [for pRF only]
 
     Returns
     -------
-    prf_deriv: derivative of pRF analysis
+    deriv: derivative of pRF/pMF analysis
 
     stucture output:
     columns: 1->size of input
@@ -79,10 +76,10 @@ def convert_fit_results(est_fn,
     row04 : size in deg
     row05 : amplitude
     row06 : baseline
-    row07 : coverage
+    row07 : coverage or nan
     row08 : x
     row09 : y
-    ['prf_rsq','prf_ecc','prf_polar_real','prf_polar_imag','prf_size','prf_amp','prf_baseline','prf_cov','prf_x','prf_y']
+    ['rsq','ecc','polar_real','polar_imag','size','amp','baseline','x','y','cov']
     """
 
     # Imports
@@ -104,8 +101,8 @@ def convert_fit_results(est_fn,
     img_est = nb.load(est_fn)
     est = img_est.get_fdata()
 
-    # Compute derived measures from prfs
-    # ----------------------------------
+    # Compute derived measures from prfs/pmfs
+    # ---------------------------------------
     # get data index
     x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, rsq_idx = 0, 1, 2, 3, 4, 5
 
@@ -113,65 +110,66 @@ def convert_fit_results(est_fn,
     est[est[:,:,:,rsq_idx] == 0] = np.nan
     
     # r-square
-    prf_rsq = est[:,:,:,rsq_idx]
+    rsq = est[:,:,:,rsq_idx]
 
-    # pRF eccentricity
-    prf_ecc = np.nan_to_num(np.sqrt(est[:,:,:,x_idx]**2 + est[:,:,:,y_idx]**2))
+    # eccentricity
+    ecc = np.nan_to_num(np.sqrt(est[:,:,:,x_idx]**2 + est[:,:,:,y_idx]**2))
 
-    # pRF polar angle
+    # polar angle
     complex_polar = est[:,:,:,x_idx] + 1j * est[:,:,:,y_idx]
     normed_polar = complex_polar / np.abs(complex_polar)
-    prf_polar_real = np.real(normed_polar)
-    prf_polar_imag = np.imag(normed_polar)
+    polar_real = np.real(normed_polar)
+    polar_imag = np.imag(normed_polar)
     
-    # pRF size
-    prf_size = est[:,:,:,sigma_idx].astype(np.float64)
-    prf_size[prf_size<1e-4] = 1e-4
+    # size
+    size_ = est[:,:,:,sigma_idx].astype(np.float64)
+    size_[size_<1e-4] = 1e-4
 
-    # pRF amplitude
-    prf_amp = est[:,:,:,beta_idx]
+    # amplitude
+    amp = est[:,:,:,beta_idx]
     
-    # pRF baseline
-    prf_baseline = est[:,:,:,baseline_idx]
+    # baseline
+    baseline = est[:,:,:,baseline_idx]
 
-    # pRF coverage
-    deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 50), np.linspace(-30, 30, 50))         # define prfs in visual space
-    flat_est = est.reshape((-1, est.shape[-1])).astype(np.float64)
-    rfs = generate_og_receptive_fields( flat_est[:,x_idx],
-                                        flat_est[:,y_idx],
-                                        flat_est[:,sigma_idx],
-                                        flat_est[:,beta_idx].T*0+1,
-                                        deg_x,
-                                        deg_y)
+    # coverage
+    if task=='pRF':
+        deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 50), np.linspace(-30, 30, 50))         # define prfs in visual space
+        flat_est = est.reshape((-1, est.shape[-1])).astype(np.float64)
+        rfs = generate_og_receptive_fields( flat_est[:,x_idx],
+                                            flat_est[:,y_idx],
+                                            flat_est[:,sigma_idx],
+                                            flat_est[:,beta_idx].T*0+1,
+                                            deg_x,
+                                            deg_y)
 
-    total_prf_content = rfs.reshape((-1, flat_est.shape[0])).sum(axis=0)
-    log_x = np.logical_and(deg_x >= -stim_width/2.0, deg_x <= stim_width/2.0)
-    log_y = np.logical_and(deg_y >= -stim_height/2.0, deg_y <= stim_height/2.0)
-    stim_vignet = np.logical_and(log_x,log_y)
-    prf_cov = rfs[stim_vignet, :].sum(axis=0) / total_prf_content
-    prf_cov = prf_cov.reshape(prf_baseline.shape)
-    
-    # pRF x
-    prf_x = est[:,:,:,x_idx]
+        total_prf_content = rfs.reshape((-1, flat_est.shape[0])).sum(axis=0)
+        log_x = np.logical_and(deg_x >= -stim_width/2.0, deg_x <= stim_width/2.0)
+        log_y = np.logical_and(deg_y >= -stim_height/2.0, deg_y <= stim_height/2.0)
+        stim_vignet = np.logical_and(log_x,log_y)
+        cov = rfs[stim_vignet, :].sum(axis=0) / total_prf_content
+        cov = cov.reshape(baseline.shape)
 
-    # pRF y
-    prf_y = est[:,:,:,y_idx]
+    # x
+    x = est[:,:,:,x_idx]
+
+    # y
+    y = est[:,:,:,y_idx]
 
     # Save results
-    prf_deriv = np.zeros((est.shape[0],est.shape[1],est.shape[2],10))*np.nan
-    prf_deriv[...,0]  = prf_rsq
-    prf_deriv[...,1]  = prf_ecc
-    prf_deriv[...,2]  = prf_polar_real
-    prf_deriv[...,3]  = prf_polar_imag
-    prf_deriv[...,4]  = prf_size
-    prf_deriv[...,5]  = prf_amp
-    prf_deriv[...,6]  = prf_baseline
-    prf_deriv[...,7]  = prf_cov
-    prf_deriv[...,8]  = prf_x
-    prf_deriv[...,9]  = prf_y
+    deriv = np.zeros((est.shape[0],est.shape[1],est.shape[2],10))*np.nan
+    deriv[...,0]  = rsq
+    deriv[...,1]  = ecc
+    deriv[...,2]  = polar_real
+    deriv[...,3]  = polar_imag
+    deriv[...,4]  = size_
+    deriv[...,5]  = amp
+    deriv[...,6]  = baseline
+    if task=='pRF':deriv[...,7]  = cov
+    deriv[...,8]  = x
+    deriv[...,9]  = y
         
-    prf_deriv = prf_deriv.astype(np.float32)
-    new_img = nb.Nifti1Image(dataobj = prf_deriv, affine = img_est.affine, header = img_est.header)
+    deriv = deriv.astype(np.float32)
+    new_img = nb.Nifti1Image(dataobj = deriv, affine = img_est.affine, header = img_est.header)
     new_img.to_filename(output_fn)
 
     return None

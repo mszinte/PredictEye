@@ -47,6 +47,13 @@ the ocumotor system.
   4. draw ROIs using on overlays using Inkscape
   5. create hdf files per roi using _post_fit/roi_to_hdf5.py_
 
+### pMFexp
+  1. run the prf fit with _fit/submit_fit.py_
+  2. combine fits and compute pRF parameters with _post_fit/post_fit.py_
+  3. make pycortex maps using _post_fit/pycortex_maps.py_
+  4. adjust ROIs using on overlays using Inkscape
+  5. create hdf files per roi using _post_fit/roi_to_hdf5.py_
+
 ## Behaviral_analysis
 1. RSexp:
 2. pRFexp:

@@ -6,21 +6,24 @@ Goal of the script:
 Draw roi plots (maps, ecc vs. params, laterality, time course)
 -----------------------------------------------------------------------------------------
 Input(s):
-sys.argv[1]: subject name (e.g. 'sub-001')
-sys.argv[2]: task (ex: GazeCenterFS)
+sys.argv[1]: subject name (e.g. 'sub-01')
+sys.argv[2]: task (ex: 'pRF', 'pMF')
 sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
-sys.argv[4]: save SVG figures (0 = No, 1 = Yes)
+sys.argv[4]: registration (e.g. T1w)
+sys.argv[6]: sub_task (e.g. 'sac', 'sp')
 -----------------------------------------------------------------------------------------
 Output(s):
-HTML figures
+HTML figures per ROI
 -----------------------------------------------------------------------------------------
 To run:
 >> cd to function
->> python post_fit/roi_plots.py [subject] [task] [preproc] [svg]
+>> python post_fit/roi_plots.py [subject] [task] [preproc] [reg] [sub-task]
 -----------------------------------------------------------------------------------------
 Exemple:
-cd /home/mszinte/projects/pRFgazeMod/mri_analysis/
-python post_fit/roi_plots.py sub-001 GazeCenterFS fmriprep_dct 0
+cd /home/mszinte/projects/PredictEye/mri_analysis/
+python post_fit/roi_plots.py sub-01 pRF fmriprep_dct T1w 
+python post_fit/roi_plots.py sub-01 pMF fmriprep_dct T1w sac
+python post_fit/roi_plots.py sub-01 pMF fmriprep_dct T1w sp
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -58,7 +61,7 @@ from utils import set_pycortex_config_file
 
 # Bokeh imports
 # ---------------
-from bokeh.io import output_notebook, show, save, output_file, export_png, export_svgs
+from bokeh.io import output_notebook, show, save, output_file
 from bokeh.layouts import row, column, gridplot
 
 # Get inputs
@@ -66,7 +69,9 @@ from bokeh.layouts import row, column, gridplot
 subject = sys.argv[1]
 task = sys.argv[2]
 preproc = sys.argv[3]
-save_svg = int(sys.argv[4])
+regist_type = sys.argv[4]
+if len(sys.argv) < 6: sub_task = ''
+else: sub_task = sys.argv[5]
 
 # Define analysis parameters
 # --------------------------
@@ -79,9 +84,12 @@ with open('settings.json') as f:
 base_dir = analysis_info['base_dir']
 rois = analysis_info['rois']
 sample_ratio = analysis_info['sample_ratio']
-deriv_dir = "{base_dir}/pp_data/{subject}/gauss/deriv".format(base_dir = base_dir, subject = subject)
-h5_dir = "{base_dir}/pp_data/{subject}/gauss/h5".format(base_dir = base_dir, subject = subject)
-bokeh_dir = "{base_dir}/pp_data/{subject}/gauss/bokeh_outputs".format(base_dir = base_dir, subject = subject)
+
+rois_mask_dir = "{}/pp_data/{}/gauss/roi_masks/".format(base_dir, subject)
+
+deriv_dir = "{}/pp_data/{}/gauss/fit/{}".format(base_dir, subject,task)
+h5_dir = "{}/pp_data/{}/gauss/h5/{}{}".format(base_dir, subject, task, sub_task)
+bokeh_dir = "{}/pp_data/{}/gauss/figures/{}{}".format(base_dir, subject, task, sub_task)
 try: os.makedirs(bokeh_dir)
 except: pass
 
@@ -96,30 +104,24 @@ rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
 for roi_num, roi in enumerate(rois):
     
     # create html folder
-    exec("html_dir = '{bokeh_dir}/html/{task}_{preproc}/'".format(bokeh_dir = bokeh_dir, task = task, preproc = preproc))
+    exec("html_dir = '{}/{}{}_{}_{}/'".format(bokeh_dir, task, sub_task, preproc, regist_type))
     try: os.makedirs(html_dir)
     except: pass
 
-    # create svg folder
-    if save_svg == 1:
-        exec("svg_dir = '{bokeh_dir}/svg/'".format(bokeh_dir = bokeh_dir))
-        try: os.makedirs(svg_dir)
-        except: pass
-
     # load h5 file
-    h5_file = h5py.File("{h5_dir}/{roi}_{task}_{preproc}.h5".format(h5_dir = h5_dir, roi = roi, task = task, preproc = preproc),'r')
+    h5_file = h5py.File("{}/{}_{}_{}.h5".format(h5_dir, roi, preproc, regist_type),'r')
 
     # load deriv data
-    deriv_data = h5_file['{folder_alias}/derivatives'.format(folder_alias = 'pRF')]
+    deriv_data = h5_file['{}{}/derivatives'.format(task, sub_task)]
     
     # load time course data
-    tc_data = h5_file['{folder_alias}/time_course'.format(folder_alias = 'pRF')]
+    tc_data = h5_file['{}{}/time_course'.format(task, sub_task)]
 
     # load model time course data
-    tc_model_data = h5_file['{folder_alias}/time_course_model'.format(folder_alias = 'pRF')]
+    tc_model_data = h5_file['{}{}/time_course_model'.format(task, sub_task)]
 
     # load coordinates data
-    coord_data = h5_file['{folder_alias}/coord'.format(folder_alias = 'pRF')]
+    coord_data = h5_file['{}{}/coord'.format(task, sub_task)]
 
     # threshold data
     voxel_num_ini = deriv_data.shape[0]
@@ -157,7 +159,7 @@ for roi_num, roi in enumerate(rois):
         coord_data = coord_data[new_order,:]
         deriv_data_sample = deriv_data[0:int(np.round(voxel_num*sample_ratio)),:]
 
-        print("drawing {roi}_{task}_{preproc} figures, n = {voxel_num}".format(roi = roi, voxel_num = voxel_num, task = task, preproc = preproc)) 
+        print("drawing {}_{}_{} figures, n = {}".format(roi, task, preproc, voxel_num)) 
 
         data_source = { 'rsq': deriv_data[:,rsq_idx],
                         'ecc': deriv_data[:,ecc_idx],
@@ -205,26 +207,24 @@ for roi_num, roi in enumerate(rois):
                         'h_hist_bins': 16,
                         'link_x': False,
                         'link_y': False,
-                        'save_svg': save_svg
                         }
-
-        if save_svg == 1:
-            param_all.update({'svg_folder': svg_dir})
 
         plotter = PlotOperator(**param_all)
 
-        # # FIG 1: PRF ECC VS...
+        # # FIG 1: ECC VS...
         # # --------------------
 
-        # pRFecc
         old_main_fig = []
-        f_pRFecc = []
-        type_comp_list = ['Size','R2','Coverage','Baseline']
+        f_ecc = []
+        if sub_task == '':
+            type_comp_list = ['Size','R2','Coverage','Baseline']
+        else:
+            type_comp_list = ['Size','R2','Baseline']
         
         for numData, type_comp in enumerate(type_comp_list):
 
-            params_pRFecc = param_all
-            params_pRFecc.update(
+            params_ecc = param_all
+            params_ecc.update(
                        {    'x_range': (0, 15),
                             'x_label': 'Eccentricity (dva)',
                             'x_tick_steps': 5,
@@ -233,89 +233,78 @@ for roi_num, roi in enumerate(rois):
                             'h_hist_bins': 15,
                             'link_x': True})
 
-            title = '{roi}: Eccentricity vs. {type_comp}'.format(roi = roi, type_comp = type_comp)
-            params_pRFecc.update({'main_fig_title': title})
+            title = '{}: Eccentricity vs. {}'.format(roi, type_comp)
+            params_ecc.update({'main_fig_title': title})
 
-            if save_svg == 1:
-                params_pRFecc.update({'svg_subfolder':'{roi}_{task}_{preproc}_pRFecc'.format(task = task, roi = roi, preproc = preproc)})
 
             if type_comp == 'Size':
-                params_pRFecc.update(
+                params_ecc.update(
                             {   'y_range': (0, 15),
                                 'y_label': 'Size (dva)',
                                 'y_source_label': 'sigma',
                                 'y_tick_steps': 5,
                                 'v_hist_bins': 15,
                                 'draw_reg': True})
-                if save_svg == 1:
-                    params_pRFecc.update({'svg_filename':'{roi}_{task}_{preproc}_pRFecc_size'.format(task = task, roi = roi, preproc = preproc)})
 
             elif type_comp == 'R2':
-                params_pRFecc.update(
+                params_ecc.update(
                             {   'y_range': (0, 1),
                                 'y_label': 'R2',
                                 'y_source_label': 'rsq',
                                 'y_tick_steps': 0.2,
                                 'v_hist_bins': 20})
-                if save_svg == 1:
-                    params_pRFecc.update({'svg_filename':'{roi}_{task}_{preproc}_pRFecc_rsq'.format(task = task, roi = roi, preproc = preproc)})
 
             elif type_comp == 'Non-Linearity':
-                params_pRFecc.update(
+                params_ecc.update(
                             {   'y_range': (0, 1.5),
                                 'y_label': 'Non-linearity',
                                 'y_source_label': 'non_lin',
                                 'y_tick_steps': 0.25,
                                 'v_hist_bins': 30})
-                if save_svg == 1:
-                    params_pRFecc.update({'svg_filename':'{roi}_{task}_{preproc}_pRFecc_non_lin'.format(task = task, roi = roi, preproc = preproc)})
-
 
             elif type_comp == 'Coverage':
-                params_pRFecc.update(
+                params_ecc.update(
                             {   'y_range': (0, 1),
-                                'y_label': 'pRF coverage (%)',
+                                'y_label': 'coverage (%)',
                                 'y_source_label': 'cov',
                                 'y_tick_steps': 0.2,
                                 'v_hist_bins': 20})
-                if save_svg == 1:
-                    params_pRFecc.update({'svg_filename':'{roi}_{task}_{preproc}_pRFecc_cov'.format(task = task, roi= roi, preproc = preproc)})
 
             elif type_comp == 'Baseline':
-                params_pRFecc.update(
+                params_ecc.update(
                             {   'y_range': (-1, 1),
                                 'y_label': 'Baseline',
                                 'y_source_label': 'baseline',
                                 'y_tick_steps': 0.5,
                                 'v_hist_bins': 16})
-                if save_svg == 1:
-                    params_pRFecc.update({'svg_filename': '{roi}_{task}_{preproc}_pRFecc_baseline'.format(task = task,roi = roi, preproc = preproc)})
 
-            out1, old_main_fig  = plotter.draw_figure(  parameters = params_pRFecc,
+            out1, old_main_fig  = plotter.draw_figure(  parameters = params_ecc,
                                                         plot = 'ecc',
                                                         old_main_fig = old_main_fig)
-            f_pRFecc.append(out1)
+            f_ecc.append(out1)
 
-        all_fig1 = gridplot([ [f_pRFecc[0],f_pRFecc[1]],
-                              [f_pRFecc[2],f_pRFecc[3]]],toolbar_location='right')
+        if sub_task == '':
+            all_fig1 = gridplot([ [f_ecc[0],f_ecc[1]],
+                                  [f_ecc[2],f_ecc[3]]],toolbar_location='right')
+        else:
+            all_fig1 = gridplot([ [f_ecc[0],f_ecc[1]],
+                                  [f_ecc[2],None]],toolbar_location='right')
 
-
-        exec('output_file_html = opj(html_dir,"{roi}_{task}_{preproc}_pRFecc.html")'.format(task = task, preproc = preproc, roi = roi))
-        html_title = "Subject: {subject} | ROI: {roi} | Data: {task} {preproc} | Voxel num: {voxel_num} | Figures: pRF maps eccentricity vs.".format(
-                                            subject = subject,roi = roi,task = task, preproc = preproc, voxel_num = voxel_num)
+        exec('output_file_html = opj(html_dir,"{}_{}{}_{}_{}_ecc.html")'.format(roi, task, sub_task, preproc, regist_type))
+        html_title = "Subject: {} | ROI: {} | Data: {}{} {} {} | Voxel num: {} | Figures: maps eccentricity vs.".format(
+                                            subject, roi, task, sub_task, preproc, regist_type, voxel_num)
         output_file(output_file_html, title = html_title)
         save(all_fig1)
         
+        # FIG 2: MAP + COV
+        # -----------------
 
-        # FIG 2: PRF MAP + PRF COV
-        # ------------------------
-
-        # pRFmap
+        # map
         old_main_fig = []
-        title = '{roi}: pRF map (n = {voxel_num})'.format(roi = roi, voxel_num = voxel_num)
-        params_pRFmap = param_all
+        title = '{}: map (n = {})'.format(roi, voxel_num)
+        params_map = param_all
 
-        params_pRFmap.update({   
+        params_map.update({   
                         'x_range': (-15, 15),
                         'y_range': (-15, 15),
                         'x_label': 'Horizontal coordinate (dva)',
@@ -327,58 +316,62 @@ for roi_num, roi in enumerate(rois):
                         'v_hist_bins': 12,
                         'h_hist_bins': 12,
                         'main_fig_title': title})
-        if save_svg == 1:
-            params_pRFmap.update({'svg_filename': '{roi}_{task}_{preproc}_pRFmap'.format(task = task, preproc = preproc, roi= roi)})
 
-        f_pRFmap, old_main_fig1 = plotter.draw_figure(  parameters = params_pRFmap, 
-                                                        plot = 'map',
-                                                        old_main_fig = old_main_fig)
+        f_map, old_main_fig1 = plotter.draw_figure(  parameters=params_map, 
+                                                     plot='map',
+                                                     old_main_fig=old_main_fig)
 
 
-        # pRF cov
-        title = '{roi}: pRF density map'.format(roi = roi)
-        params_pRFcov = param_all
-        params_pRFcov.update({   
-                        'x_range': (-15, 15), 
-                        'y_range': (-15, 15),
-                        'x_label': 'Horizontal coordinate (dva)',
-                        'y_label': 'Vertical coordinate (dva)',
-                        'x_tick_steps': 5,
-                        'y_tick_steps': 5,
-                        'smooth_factor': 15,
-                        'cmap': 'viridis',
-                        'cmap_steps': 10,
-                        'col_offset': 0,
-                        'vmin': 0,
-                        'vmax': 1,
-                        'cb_tick_steps': 0.2,
-                        'cb_label': 'pRF coverage (norm.)',
-                        'link_x': True,
-                        'link_y': True})
-        if save_svg == 1:
-            params_pRFcov.update({'svg_filename': '{roi}_{task}_{preproc}_pRFcov'.format(task = task, roi = roi, preproc = preproc)})
+        # cov
+        if sub_task == '':
 
-        params_pRFcov.update({'main_fig_title':   title})
+            title = '{}: density map'.format(roi)
+            params_cov = param_all
+            params_cov.update({   
+                            'x_range': (-15, 15), 
+                            'y_range': (-15, 15),
+                            'x_label': 'Horizontal coordinate (dva)',
+                            'y_label': 'Vertical coordinate (dva)',
+                            'x_tick_steps': 5,
+                            'y_tick_steps': 5,
+                            'smooth_factor': 15,
+                            'cmap': 'viridis',
+                            'cmap_steps': 10,
+                            'col_offset': 0,
+                            'vmin': 0,
+                            'vmax': 1,
+                            'cb_tick_steps': 0.2,
+                            'cb_label': 'coverage (norm.)',
+                            'link_x': True,
+                            'link_y': True})
 
-        f_pRFcov, old_main_fig1 = plotter.draw_figure( parameters = params_pRFcov, 
-                                                       plot = 'cov',
-                                                       old_main_fig = old_main_fig1)
+            params_cov.update({'main_fig_title':   title})
 
-        all_fig2 = gridplot([ [f_pRFmap,f_pRFcov]], toolbar_location = 'right')
+            f_cov, old_main_fig1 = plotter.draw_figure( parameters=params_cov, 
+                                                        plot='cov',
+                                                        old_main_fig=old_main_fig1)
 
-        exec('output_file_html = opj(html_dir,"{roi}_{task}_{preproc}_pRFmap.html")'.format(task = task, preproc = preproc, roi = roi))
-        html_title = "Subject: {subject} | ROI: {roi} | Data: {task} {preproc} | Voxel num: {voxel_num} | Figures: pRF maps parameters and density".format(
-                                            subject = subject,roi = roi, task = task, preproc = preproc, voxel_num = voxel_num)
-        output_file(output_file_html, title = html_title)
+            all_fig2 = gridplot([ [f_map,f_cov]], toolbar_location='right')
+            title_html = "maps parameters and density"
+
+        else:
+            all_fig2 = gridplot([ [f_map]], toolbar_location='right')
+            title_html = "maps parameters"
+
+
+        exec('output_file_html = opj(html_dir,"{}_{}{}_{}_{}_map.html")'.format(roi, task, sub_task, preproc, regist_type))
+        html_title = "Subject: {} | ROI: {} | Data: {}{} {} {} | Voxel num: {} | Figures: {}".format(
+                                            subject, roi, task, sub_task, preproc, regist_type, voxel_num, title_html)
+        output_file(output_file_html, title=html_title)
         save(all_fig2)
         
 
-        # FIG 3: pRF laterality
+        # FIG 3: laterality
         # ---------------------
         old_main_fig = []
-        title = '{roi}: pRF laterality histogram'.format(roi = roi)
-        params_pRFlat = param_all
-        params_pRFlat.update(
+        title = '{}: laterality histogram'.format(roi)
+        params_lat = param_all
+        params_lat.update(
                     {   'p_width': 500, 
                         'p_height': 500,
                         'dataMat': deriv_data,
@@ -391,43 +384,45 @@ for roi_num, roi in enumerate(rois):
                         'cmap': 'hsv',
                         'cmap_steps': 16,
                         'ang_bins': 36})
-        if save_svg == 1:
-            params_pRFlat.update({'svg_filename':'{roi}_{task}_{preproc}_pRFlat'.format(task = task, roi = roi, preproc = preproc)})
 
-        params_pRFcov.update({'main_fig_title':   title})
-        f_pRFlat, old_main_fig1 = plotter.draw_figure( parameters = params_pRFlat, 
-                                                       plot = 'lat',
-                                                       old_main_fig = old_main_fig)
+        
+        params_lat.update({'main_fig_title':   title})
+        f_lat, old_main_fig1 = plotter.draw_figure( parameters=params_lat, 
+                                                    plot= 'lat',
+                                                    old_main_fig=old_main_fig)
 
-        all_fig3 = gridplot([[f_pRFlat]],toolbar_location = 'right')
-        exec('output_file_html = opj(html_dir,"{roi}_{task}_{preproc}_pRFlat.html")'.format(task = task, preproc = preproc, roi = roi))
-        html_title = "Subject: {subject} | ROI: {roi} | Data: {task} {preproc} | Voxel num: {voxel_num} | Figures: pRF laterality histogram".format(
-                                            subject = subject,roi = roi, task = task, voxel_num = voxel_num, preproc = preproc)
-        output_file(output_file_html, title = html_title)
+        all_fig3 = gridplot([[f_lat]],toolbar_location='right')
+        exec('output_file_html = opj(html_dir,"{}_{}{}_{}_{}_lat.html")'.format(roi, task, sub_task, preproc, regist_type))
+        html_title = "Subject: {} | ROI: {} | Data: {}{} {} {} | Voxel num: {} | Figures: laterality histogram".format(
+                                        subject, roi, task, sub_task, preproc, regist_type, voxel_num)
+        
+        output_file(output_file_html, title=html_title)
         save(all_fig3)
 
-        # FIG 4: pRF time course
+        # FIG 4: time course
         # ----------------------
-
         step_r2 = [0,100/3.0,250/3.0,100]
         list_r2_level = ['High','Low']
         step_params = [0,100/3.0,200/3.0,100]
         list_params_level = ['Low','High']
-        list_params = ['ecc','amp','size','cov']
-
-        # pRF tc
-        params_pRFtc = param_all
-        
-        if task == 'GazeCenterFS':
-            trs = analysis_info['TRs'][0]
-            stim_on = ([11,42],[53,70],[81,112],[123,140])
-            stim_dir = (['left'],['down'],['right'],['up'])
+        if sub_task == '':
+            list_params = ['ecc','amp','size','cov']
         else:
-            trs = analysis_info['TRs'][1]
-            stim_on = ([11,28],[39,56],[67,84],[95,112])
-            stim_dir = (['left'],['right'],['left'],['right'])
+            list_params = ['ecc','amp','size']
+
+        # tc
+        params_tc = param_all
         
-        params_pRFtc.update(
+        trs = analysis_info['TRs']
+        stim_on = ([17,48],[65,96],[113,144],[161,192])
+        if sub_task =='':
+            stim_dir = (['right'],['top'],['left'],['bottom'])
+        elif sub_task == 'sac':
+            stim_dir = (['sac'],['sac'],['sac'],['sac'])
+        elif sub_task == 'sp':
+            stim_dir = (['sp'],['sp'],['sp'],['sp'])
+
+        params_tc.update(
                     {   'p_width': 500, 
                         'p_height': 500,
                         'x_range_map': (-15,15),
@@ -436,22 +431,19 @@ for roi_num, roi in enumerate(rois):
                         'y_label_map': 'Vertical coord. (dva)',
                         'x_tick_map': 5,
                         'y_tick_map': 5,
-                        'x_range_tc': (0,trs*analysis_info['TR']),
+                        'x_range_tc': (0,trs*analysis_info['TR']), 
                         'x_label_tc': 'Time (s)',
-                        'y_label_tc': 'BOLD signal change (%)',
-                        'x_tick_tc': 10,
+                        'y_label_tc': 'z score',
+                        'x_tick_tc': 50,
                         'tr_dur': analysis_info['TR'],
                         'model_line_color': tuple([254,51,10]),
                         'model_fill_color': tuple([254,51,10])
                     })
 
-        if save_svg == 1:
-            params_pRFtc.update({'svg_subfolder': '{roi}_{task}_{preproc}_pRFtc'.format(task = task, preproc = preproc, roi = roi)})
-
-        f_pRFtc = []
+        f_tc = []
 
         # get index matrices
-        prct_r2 = np.nanpercentile(a = deriv_data[:,rsq_idx],q = step_r2)
+        prct_r2 = np.nanpercentile(a=deriv_data[:,rsq_idx], q=step_r2)
         idx_r2 = []
 
         for r2_step in np.arange(0,len(step_r2)-1,2):
@@ -460,29 +452,29 @@ for roi_num, roi in enumerate(rois):
         # get voxel number to draw
         for param in list_params:
 
-            exec('prct_{param} = np.nanpercentile(a = deriv_data[:,{param}_idx],q = step_params)'.format(param = param))
-            exec('idx_{param} = []'.format(param = param))
+            exec('prct_{param} = np.nanpercentile(a = deriv_data[:,{param}_idx],q = step_params)'.format(param=param))
+            exec('idx_{} = []'.format(param))
 
             for param_step in np.arange(0,len(step_params)-1,2):
-                exec('idx_{param}.append(np.logical_and(deriv_data[:,{param}_idx]>=prct_{param}[param_step],deriv_data[:,{param}_idx]<=prct_{param}[param_step+1]))'.format(param = param))
+                exec('idx_{param}.append(np.logical_and(deriv_data[:,{param}_idx]>=prct_{param}[param_step],deriv_data[:,{param}_idx]<=prct_{param}[param_step+1]))'.format(param=param))
 
 
-            exec('num_{param} = []'.format(param = param))
+            exec('num_{} = []'.format(param))
 
             for r2_step in np.arange(0,2,1):
 
                 for param_step in np.arange(0,2,1):
 
-                    exec('mat = np.where(np.logical_and(idx_r2[r2_step],idx_{param}[param_step]))'.format(param = param))
+                    exec('mat = np.where(np.logical_and(idx_r2[r2_step],idx_{}[param_step]))'.format(param))
 
                     if mat[0].size == 0:
-                        exec('num_{param}.append(-1)'.format(param = param))
+                        exec('num_{}.append(-1)'.format(param))
                     else:
-                        exec('num_{param}.append(mat[0][np.random.choice(len(mat[0]))])'.format(param = param))
+                        exec('num_{}.append(mat[0][np.random.choice(len(mat[0]))])'.format(param))
 
 
         for param in list_params:
-            exec('num_voxel = num_{param}'.format(param = param))
+            exec('num_voxel = num_{}'.format(param))
 
             for r2_level in list_r2_level:
                 if r2_level == 'Low':
@@ -490,7 +482,7 @@ for roi_num, roi in enumerate(rois):
                 elif r2_level == 'High':
                     num_voxel2draw = num_voxel[2:4]
 
-                params_pRFtc.update(
+                params_tc.update(
                                 {   'params': param,
                                     'r2_level': r2_level,
                                     'deriv_mat': deriv_data,
@@ -500,28 +492,29 @@ for roi_num, roi in enumerate(rois):
                                     'coord_mat':coord_data,
                                     'stim_on': stim_on,
                                     'stim_dir': stim_dir,
-                                    'title': '{roi}'.format(roi = roi)
+                                    'title': '{}'.format(roi)
                                 })
-                if save_svg == 1:
-                    params_pRFtc.update({'svg_filename':'{roi}_{task}_{preproc}_pRFtc_rsq_{r2_level}_{param}'.format(task = task, preproc = preproc, roi = roi,r2_level = r2_level, param = param)})
 
-                out4,main_fig4  = plotter.draw_figure(  parameters = params_pRFtc,
-                                                        plot = 'tc')
+                out4,main_fig4  = plotter.draw_figure(parameters=params_tc,
+                                                      plot='tc')
 
+                f_tc.append(out4)
+        if sub_task == '':
+            all_fig4 = gridplot([   [f_tc[0],f_tc[1]],
+                                    [f_tc[2],f_tc[3]],
+                                    [f_tc[4],f_tc[5]],
+                                    [f_tc[6],f_tc[7]]], toolbar_location=None)
+        else:
+            all_fig4 = gridplot([   [f_tc[0],f_tc[1]],
+                                    [f_tc[2],f_tc[3]],
+                                    [f_tc[4],f_tc[5]]], toolbar_location=None)
 
-
-                f_pRFtc.append(out4)
-
-        all_fig4 = gridplot([   [f_pRFtc[0],f_pRFtc[1]],
-                                [f_pRFtc[2],f_pRFtc[3]],
-                                [f_pRFtc[4],f_pRFtc[5]],
-                                [f_pRFtc[6],f_pRFtc[7]]],toolbar_location = None)
-
-        exec('output_file_html = opj(html_dir,"{roi}_{task}_{preproc}_pRFtc.html")'.format(task = task, preproc = preproc, roi = roi))
-        html_title = "Subject: {subject} | ROI: {roi} | Data: {task} {preproc} | Voxel num: {voxel_num} | Figures: pRF time course".format(
-                                            subject = subject,roi = roi, task = task, preproc = preproc, voxel_num = voxel_num)
+        exec('output_file_html = opj(html_dir,"{}_{}{}_{}_{}_tc.html")'.format(roi, task, sub_task, preproc, regist_type))
+        html_title = "Subject: {} | ROI: {} | Data: {}{} {} {} | Voxel num: {} | Figures: time course".format(
+                                            subject, roi, task, sub_task, preproc, regist_type, voxel_num)
         output_file(output_file_html, title = html_title)
         save(all_fig4)
 
     else:
-        print("drawing {roi}_{task}_{preproc} figures not possible: n = {voxel_num}".format(roi = roi, voxel_num = voxel_num, task = task, preproc = preproc))
+
+        print("drawing {}_{}_{}_{} figures not possible: n = {}".format(roi, task, preproc, regist_type, voxel_num))
