@@ -61,7 +61,7 @@ with open('settings.json') as f:
 # Cluster settings
 base_dir = analysis_info['base_dir']
 sub_command = 'sbatch '
-fit_per_hour = 6000.0
+fit_per_hour = 4000.0
 nb_procs = 32
 memory_val = 128
 proj_name = 'b161'
@@ -171,4 +171,5 @@ for slice_nb in slices:
 
     # Submit jobs
     print("Submitting {sh_dir} to queue".format(sh_dir=sh_dir))
-    os.system("{sub_command} {sh_dir}".format(sub_command=sub_command, sh_dir=sh_dir))
+    # os.system("{sub_command} {sh_dir}".format(sub_command=sub_command, sh_dir=sh_dir))
+    ddd

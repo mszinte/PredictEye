@@ -44,6 +44,7 @@ import glob
 import datetime
 import json
 import ipdb
+deb = pdb.set_trace
 
 # MRI analysis imports
 # --------------------
@@ -53,6 +54,8 @@ from prfpy.stimulus import PRFStimulus2D
 from prfpy.model import Iso2DGaussianModel
 from prfpy.fit import Iso2DGaussianFitter
 import nibabel as nb
+
+deb()
 
 # Get inputs
 # ----------
@@ -77,12 +80,10 @@ nb_procs = 32
 
 # Get task specific settings
 if task == 'pRF':
-    screen_height_cm = analysis_info['screen_height']
     # to create stimulus design (create in matlab - see others/make_visual_dm.m)
     visual_dm_file = scipy.io.loadmat('{}/pp_data/visual_dm/pRF_vd.mat'.format(base_dir))
 
 elif task == 'pMF':
-    screen_height_cm = analysis_info['screen_width'] # make it as width as saccades can go out of the pixel of the screen 
     pmf_seq_num_all = analysis_info['pmf_seq_num']    # put by hand after looking randomly selected order in event file
     pmf_seq_num = pmf_seq_num_all[int(subject[-2:])-1]
     # to create stimulus design (create in jupyter lab - see fit/pMF/pMFvd.ipynb)
@@ -91,7 +92,6 @@ elif task == 'pMF':
 # Load data
 data_file = "{base_dir}/pp_data/{sub}/func/{sub}_task-{task}_space-{reg}_{preproc}_avg.nii.gz".format(
                         base_dir=base_dir, sub=subject, task=task, reg=regist_type, preproc=preproc)
-
 data_img = nb.load(data_file)
 data = data_img.get_fdata()
 data_var = np.var(data, axis=3)
@@ -107,14 +107,12 @@ y, x = np.meshgrid(np.arange(data.shape[1]),np.arange(data.shape[0]))
 x_vox,y_vox = x[slice_mask],y[slice_mask]
 vox_indices = [(xx,yy,slice_nb) for xx,yy in zip(x_vox,y_vox)]
 
-
 # determine model
-visual_dm = visual_dm_file['stim'].transpose([1,0,2])
-stimulus = PRFStimulus2D(screen_width_cm=analysis_info['screen_width'],
-                         screen_height_cm=screen_height_cm,
-                         screen_distance_cm=analysis_info['screen_distance'],
-                         design_matrix=visual_dm,
-                         TR=analysis_info['TR'])
+visual_dm = visual_dm_file['stim']
+stimulus = PRFStimulus2D(   screen_size_cm=analysis_info['screen_width'],
+                            screen_distance_cm=analysis_info['screen_distance'],
+                            design_matrix=visual_dm,
+                            TR=analysis_info['TR'])
 
 gauss_model = Iso2DGaussianModel(stimulus=stimulus)
 grid_nr = analysis_info['grid_nr']
