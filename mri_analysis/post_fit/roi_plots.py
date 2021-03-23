@@ -135,12 +135,13 @@ for roi_num, roi in enumerate(rois):
 
         # threshold on eccentricity and size
         deriv_data_th = deriv_data
-        rsqr_th = deriv_data_th[:,rsq_idx] >= analysis_info['rsqr_th']
+        rsqr_th_down = deriv_data_th[:,rsq_idx] >= analysis_info['rsqr_th'][0]
+        rsqr_th_up = deriv_data_th[:,rsq_idx] <= analysis_info['rsqr_th'][1]
         size_th_down = deriv_data_th[:,size_idx] >= analysis_info['size_th'][0]
         size_th_up = deriv_data_th[:,size_idx] <= analysis_info['size_th'][1]
         ecc_th_down = deriv_data_th[:,ecc_idx] >= analysis_info['ecc_th'][0]
         ecc_th_up = deriv_data_th[:,ecc_idx] <= analysis_info['ecc_th'][1]
-        all_th = np.array((rsqr_th,size_th_down,size_th_up,ecc_th_down,ecc_th_up)) 
+        all_th = np.array((rsqr_th_up,rsqr_th_down,size_th_down,size_th_up,ecc_th_down,ecc_th_up)) 
 
         deriv_data = deriv_data[np.logical_and.reduce(all_th),:]
         tc_data = tc_data[np.logical_and.reduce(all_th),:]

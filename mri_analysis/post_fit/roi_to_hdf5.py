@@ -39,14 +39,16 @@ import json
 import glob
 import numpy as np
 import scipy.io
+import ipdb
+deb = ipdb.set_trace
 
 # MRI imports
 # -----------
-from prfpy.rf import *
-from prfpy.timecourse import *
-from prfpy.stimulus import PRFStimulus2D
-from prfpy.model import Iso2DGaussianModel
-from prfpy.fit import Iso2DGaussianFitter
+from model.prfpy.rf import *
+from model.prfpy.timecourse import *
+from model.prfpy.stimulus import PRFStimulus2D
+from model.prfpy.model import Iso2DGaussianModel
+from model.prfpy.fit import Iso2DGaussianFitter
 import nibabel as nb
 import cortex
 
@@ -82,22 +84,21 @@ cortical_mask = analysis_info['cortical_mask']
 
 # Get task specific settings
 if task == 'pRF':
-    screen_height_cm = analysis_info['screen_height']
+    # to create stimulus design (create in matlab - see others/make_visual_dm.m)
     visual_dm_file = scipy.io.loadmat('{}/pp_data/visual_dm/pRF_vd.mat'.format(base_dir))
 
 elif task == 'pMF':
-    screen_height_cm = analysis_info['screen_width']
-    pmf_seq_num_all = analysis_info['pmf_seq_num']
+    pmf_seq_num_all = analysis_info['pmf_seq_num']    # put by hand after looking randomly selected order in event file
     pmf_seq_num = pmf_seq_num_all[int(subject[-2:])-1]
+    # to create stimulus design (create using fit/pmf_design.py)
     visual_dm_file = scipy.io.loadmat("{}/pp_data/visual_dm/{}{}_vd_{}.mat".format(base_dir,task,sub_task, pmf_seq_num))
 
 # determine model
 visual_dm = visual_dm_file['stim'].transpose([1,0,2])
-stimulus = PRFStimulus2D(screen_width_cm=analysis_info['screen_width'],
-                         screen_height_cm=screen_height_cm,
-                         screen_distance_cm=analysis_info['screen_distance'],
-                         design_matrix=visual_dm,
-                         TR=analysis_info['TR'])
+stimulus = PRFStimulus2D(   screen_size_cm=analysis_info['screen_width'],
+                            screen_distance_cm=analysis_info['screen_distance'],
+                            design_matrix=visual_dm,
+                            TR=analysis_info['TR'])
 
 gauss_model = Iso2DGaussianModel(stimulus=stimulus)
 

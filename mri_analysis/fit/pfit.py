@@ -37,22 +37,22 @@ warnings.filterwarnings("ignore")
 
 # General imports
 # ---------------
-import sys
+import sys, os
 import numpy as np
 import scipy.io
 import glob
 import datetime
 import json
 import ipdb
-deb = pdb.set_trace
+deb = ipdb.set_trace
 
 # MRI analysis imports
 # --------------------
-from prfpy.rf import *
-from prfpy.timecourse import *
-from prfpy.stimulus import PRFStimulus2D
-from prfpy.model import Iso2DGaussianModel
-from prfpy.fit import Iso2DGaussianFitter
+from model.prfpy.rf import *
+from model.prfpy.timecourse import *
+from model.prfpy.stimulus import PRFStimulus2D
+from model.prfpy.model import Iso2DGaussianModel
+from model.prfpy.fit import Iso2DGaussianFitter
 import nibabel as nb
 
 deb()
@@ -86,7 +86,7 @@ if task == 'pRF':
 elif task == 'pMF':
     pmf_seq_num_all = analysis_info['pmf_seq_num']    # put by hand after looking randomly selected order in event file
     pmf_seq_num = pmf_seq_num_all[int(subject[-2:])-1]
-    # to create stimulus design (create in jupyter lab - see fit/pMF/pMFvd.ipynb)
+    # to create stimulus design (create using fit/pmf_design.py)
     visual_dm_file = scipy.io.loadmat("{}/pp_data/visual_dm/{}{}_vd_{}.mat".format(base_dir,task,sub_task, pmf_seq_num))
     
 # Load data
@@ -117,7 +117,7 @@ stimulus = PRFStimulus2D(   screen_size_cm=analysis_info['screen_width'],
 gauss_model = Iso2DGaussianModel(stimulus=stimulus)
 grid_nr = analysis_info['grid_nr']
 max_ecc_size = analysis_info['max_ecc_size']
-sizes = max_ecc_size * np.linspace(0.25,1,grid_nr)**2
+sizes = max_ecc_size * np.linspace(0.1,1,grid_nr)**2
 eccs = max_ecc_size * np.linspace(0.1,1,grid_nr)**2
 polars = np.linspace(0, 2*np.pi, grid_nr)
 

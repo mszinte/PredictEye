@@ -3,9 +3,9 @@ def set_pycortex_config_file(data_folder):
     # Import necessary modules
     import os
     import cortex
-    import ipdb
+    # import ipdb
     from pathlib import Path
-    deb = ipdb.set_trace
+    # deb = ipdb.set_trace
 
     # Define the new database and colormaps folder
     pycortex_db_folder = data_folder + '/pp_data/cortex/db/'
@@ -89,8 +89,8 @@ def convert_fit_results(est_fn, output_fn, task, stim_width, stim_height):
     import nibabel as nb
     import glob
     import numpy as np
-    import ipdb
-    deb = ipdb.set_trace
+    # import ipdb
+    # deb = ipdb.set_trace
     
     # Popeye imports
     from popeye.spinach import generate_og_receptive_fields
@@ -220,8 +220,8 @@ def draw_cortex_vertex(subject,xfmname,data,cmap,vmin,vmax,description,cbar = 'd
     import matplotlib.colors as colors
     from matplotlib import cm
     import matplotlib as mpl
-    import ipdb
-    deb = ipdb.set_trace
+    # import ipdb
+    # deb = ipdb.set_trace
 
     # define colormap
     base = cortex.utils.get_cmap(cmap)
@@ -366,9 +366,9 @@ def mask_nifti_2_hdf5(deriv_file, tc_file, mask_file_L, mask_file_R, hdf5_file, 
     import nibabel as nb
     import numpy as np
     import h5py
-    import ipdb
+    # import ipdb
     import os
-    deb = ipdb.set_trace
+    # deb = ipdb.set_trace
 
     # load deriv file to mask
     deriv_file_img = nb.load(deriv_file)
