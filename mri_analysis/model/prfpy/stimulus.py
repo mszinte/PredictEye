@@ -143,17 +143,21 @@ class PRFStimulus2D(object):
         None.
         """
 
+
+
         self.screen_size_cm = screen_size_cm
         self.screen_distance_cm = screen_distance_cm
         self.design_matrix = design_matrix
         if len(self.design_matrix.shape) >= 3 and self.design_matrix.shape[0] != self.design_matrix.shape[1]:
             raise ValueError  # need the screen to be square
         self.TR = TR
-                
+
+        
         # other useful stimulus properties
         self.task_lengths = task_lengths
         self.task_names = task_names
         self.late_iso_dict = late_iso_dict
+
 
         self.screen_size_degrees = 2.0 * \
             np.degrees(np.arctan(self.screen_size_cm /
@@ -163,6 +167,10 @@ class PRFStimulus2D(object):
                                 self.screen_size_degrees/2,
                                 self.design_matrix.shape[0],
                                 endpoint=True)
+
+
+
+
         self.x_coordinates, self.y_coordinates = np.meshgrid(
             oneD_grid, oneD_grid)
         self.complex_coordinates = self.x_coordinates + self.y_coordinates * 1j

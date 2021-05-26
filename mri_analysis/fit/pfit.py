@@ -55,7 +55,6 @@ from model.prfpy.model import Iso2DGaussianModel
 from model.prfpy.fit import Iso2DGaussianFitter
 import nibabel as nb
 
-deb()
 
 # Get inputs
 # ----------
@@ -82,13 +81,15 @@ nb_procs = 32
 if task == 'pRF':
     # to create stimulus design (create in matlab - see others/make_visual_dm.m)
     visual_dm_file = scipy.io.loadmat('{}/pp_data/visual_dm/pRF_vd.mat'.format(base_dir))
+    visual_dm = visual_dm_file['stim'].transpose([1,0,2])
 
 elif task == 'pMF':
     pmf_seq_num_all = analysis_info['pmf_seq_num']    # put by hand after looking randomly selected order in event file
     pmf_seq_num = pmf_seq_num_all[int(subject[-2:])-1]
     # to create stimulus design (create using fit/pmf_design.py)
     visual_dm_file = scipy.io.loadmat("{}/pp_data/visual_dm/{}{}_vd_{}.mat".format(base_dir,task,sub_task, pmf_seq_num))
-    
+    visual_dm = visual_dm_file['stim']
+
 # Load data
 data_file = "{base_dir}/pp_data/{sub}/func/{sub}_task-{task}_space-{reg}_{preproc}_avg.nii.gz".format(
                         base_dir=base_dir, sub=subject, task=task, reg=regist_type, preproc=preproc)
@@ -108,11 +109,12 @@ x_vox,y_vox = x[slice_mask],y[slice_mask]
 vox_indices = [(xx,yy,slice_nb) for xx,yy in zip(x_vox,y_vox)]
 
 # determine model
-visual_dm = visual_dm_file['stim']
+
 stimulus = PRFStimulus2D(   screen_size_cm=analysis_info['screen_width'],
                             screen_distance_cm=analysis_info['screen_distance'],
                             design_matrix=visual_dm,
                             TR=analysis_info['TR'])
+
 
 gauss_model = Iso2DGaussianModel(stimulus=stimulus)
 grid_nr = analysis_info['grid_nr']

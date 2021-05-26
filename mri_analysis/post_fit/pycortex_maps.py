@@ -94,7 +94,7 @@ rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
 cmap_polar = 'hsv'
 cmap_uni = 'Reds'
 cmap_ecc_size = 'Spectral'
-col_offset = 1/14.0
+col_offset = 1.0/14.0
 cmap_steps = 255
 
 print('save pycortex flatmaps')
