@@ -91,9 +91,9 @@ set_pycortex_config_file(base_dir)
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
     amp_idx, baseline_idx, cov_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8,9
 
-cmap_polar = 'hsv'
-cmap_uni = 'Reds'
-cmap_ecc_size = 'Spectral'
+cmap_polar = 'hsv2'
+cmap_uni = 'Reds2'
+cmap_ecc_size = 'Spectral2'
 col_offset = 1.0/14.0
 cmap_steps = 255
 
