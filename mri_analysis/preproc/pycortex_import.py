@@ -37,7 +37,7 @@ opj = os.path.join
 deb = pdb.set_trace
 
 # MRI imports
-# ----------d-
+# -----------
 import cortex
 from cortex.fmriprep import *
 import nibabel as nb

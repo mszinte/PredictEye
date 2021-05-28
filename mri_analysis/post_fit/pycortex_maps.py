@@ -168,7 +168,6 @@ for maps_name in maps_names:
     exec('vol_description = param_{}["description"]'.format(maps_name))
     exec('volume = volume_{}'.format(maps_name))
     volumes.update({vol_description:volume})
-    
 
 print('save pycortex webviewer')
 cortex.webgl.make_static(outpath=webviewer_dir, data=volumes)
