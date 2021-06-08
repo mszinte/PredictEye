@@ -13,7 +13,8 @@ sys.argv[4]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
 sys.argv[4]: registration (e.g. T1w)
 sys.argv[6]: save SVG (0  = No, 1 = Yes)
 sys.argv[7]: save timecourses
-sys.argv[8]: sub_task (e.g. 'sac', 'sp')
+sys.argv[8]: send to webapp 
+sys.argv[9]: sub_task (e.g. 'sac', 'sp')
 -----------------------------------------------------------------------------------------
 Output(s):
 pycortex flat maps figures
@@ -21,14 +22,14 @@ pycortex flat maps figures
 To run:
 >> cd to function
 >> python post_fit/pycortex_maps.py [mount] [subject] [task] [preproc] [reg] [svg] 
-                                                                        [tc] [sub_task]
+                                                             [tc] [webapp] [sub_task] 
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
-python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pRF fmriprep_dct T1w 0 0
-python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pRF fmriprep_dct T1w 0 1
-python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pMF fmriprep_dct T1w 0 0 sac
-python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pMF fmriprep_dct T1w 0 0 sp
+python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pRF fmriprep_dct T1w 0 0 1 
+python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pRF fmriprep_dct T1w 0 1 0
+python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pMF fmriprep_dct T1w 0 0 0 sac
+python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pMF fmriprep_dct T1w 0 0 0 sp
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -46,6 +47,8 @@ import sys
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+import ipdb
+deb = ipdb.set_trace
 
 # MRI imports
 # -----------
@@ -67,8 +70,9 @@ save_svg = int(sys.argv[6])
 if save_svg == 1: save_svg = True
 else: save_svg = False
 plot_tc = int(sys.argv[7])
-if len(sys.argv) < 9: sub_task = ''
-else: sub_task = sys.argv[8]
+webapp = int(sys.argv[8])
+if len(sys.argv) < 10: sub_task = ''
+else: sub_task = sys.argv[9]
 
 # Define analysis parameters
 # --------------------------
@@ -170,7 +174,15 @@ for maps_name in maps_names:
     volumes.update({vol_description:volume})
 
 print('save pycortex webviewer')
-cortex.webgl.make_static(outpath=webviewer_dir, data=volumes)
+cortex.webgl.make_static(outpath=webviewer_dir, data=volumes, recache=True)
+
+# Send to webapp
+# --------------
+if webapp == 1:
+    
+    webapp_dir = analysis_info['webapp_dir']
+    os.system('rsync -avuz --progress {local_dir} {webapp_dir}'.format(local_dir=webviewer_dir, webapp_dir=webapp_dir))
+
 
 # TC data
 # -------
@@ -198,3 +210,4 @@ if plot_tc == 1:
     # create webgl
     print('save pycortex webviewer: time course {}'.format(task))
     cortex.webgl.make_static(outpath = webviewer_dir, data = volume_tc)
+
