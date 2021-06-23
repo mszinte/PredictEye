@@ -174,7 +174,7 @@ def convert_fit_results(est_fn, output_fn, task, stim_width, stim_height):
 
     return None
     
-def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,cmap='Viridis',cbar = 'discrete',cmap_steps = 255,\
+def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='VolumeRGB',cmap='Viridis',cbar = 'discrete',cmap_steps = 255,\
                         alpha = None,depth = 1,thick = 1,height = 1024,sampler = 'nearest',\
                         with_curvature = True,with_labels = False,with_colorbar = False,\
                         with_borders = False,curv_brightness = 0.95,curv_contrast = 0.05,add_roi = False,\
@@ -190,6 +190,7 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,cmap='Viridis'
     vmins               : minimal values of 1D 2D colormap [0] = 1D, [1] = 2D
     vmaxs               : minimal values of 1D/2D colormap [0] = 1D, [1] = 2D
     description         : plot title
+    volume_type         : cortex function to create the volume (VolumeRGB or Volume2D)
     cbar                : color bar layout
     cmap_steps          : number of colormap bins
     alpha               : alpha map
@@ -222,26 +223,40 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,cmap='Viridis'
     import matplotlib as mpl
     # import ipdb
     # deb = ipdb.set_trace
-
+    
     # define colormap
     base = cortex.utils.get_cmap(cmap)
+        
+    if '_alpha' in cmap: base.colors = base.colors[1,:,:]
     val = np.linspace(0, 1,cmap_steps+1,endpoint=False)
     colmap = colors.LinearSegmentedColormap.from_list('my_colmap',base(val), N = cmap_steps)
     
-    # convert data to RGB
-    vrange = float(vmax) - float(vmin)
-    norm_data = ((data-float(vmin))/vrange)*cmap_steps
-    mat = colmap(norm_data.astype(int))*255.0
-    alpha = alpha*255.0
+    if volume_type=='VolumeRGB':
+        # convert data to RGB
+        vrange = float(vmax) - float(vmin)
+        norm_data = ((data-float(vmin))/vrange)*cmap_steps
+        mat = colmap(norm_data.astype(int))*255.0
+        alpha = alpha*255.0
 
-    # define volume RGB
+        # define volume RGB
 
-    volume = cortex.VolumeRGB(  channel1 = mat[...,0].T.astype(np.uint8),
-                                channel2 = mat[...,1].T.astype(np.uint8),
-                                channel3 = mat[...,2].T.astype(np.uint8),
-                                alpha = alpha.T.astype(np.uint8),
-                                subject = subject,
-                                xfmname = xfmname)
+        volume = cortex.VolumeRGB(  channel1 = mat[...,0].T.astype(np.uint8),
+                                    channel2 = mat[...,1].T.astype(np.uint8),
+                                    channel3 = mat[...,2].T.astype(np.uint8),
+                                    alpha = alpha.T.astype(np.uint8),
+                                    subject = subject,
+                                    xfmname = xfmname)
+    elif volume_type=='Volume2D':
+        volume = cortex.Volume2D(dim1 = data.T,
+                                 dim2 = alpha.T,
+                                 subject = subject,
+                                 xfmname = xfmname,
+                                 description = description,
+                                 cmap = cmap,
+                                 vmin = vmin[0],
+                                 vmax = vmax[0],
+                                 vmin2 = vmin[1],
+                                 vmax2 = vmax[1])
     
     volume_fig = cortex.quickshow(  braindata = volume,
                                     depth = depth,
@@ -318,8 +333,8 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,cmap='Viridis'
         cmaplist = [colmap(i) for i in range(colmap.N)]
 
         # define the bins and normalize
-        bounds = np.linspace(vmin, vmax, cmap_steps + 1)
-        bounds_label = np.linspace(vmin, vmax, 3)
+        bounds = np.linspace(vmin, vmax, cmap_steps + 1) if volume_type=='VolumeRGB' else np.linspace(vmin[0], vmax[0], cmap_steps + 1)
+        bounds_label = np.linspace(vmin, vmax, 3) if volume_type=='VolumeRGB' else np.linspace(vmin[0], vmax[0], 3)
         norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
             
         cbar_axis = volume_fig.add_axes(colorbar_location)
