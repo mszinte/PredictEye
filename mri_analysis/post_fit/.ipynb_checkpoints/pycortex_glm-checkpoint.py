@@ -55,7 +55,7 @@ import cortex
 
 # Functions import
 # ----------------
-from utils import draw_cortex_vertex, set_pycortex_config_file
+from utils import draw_cortex_vertex, set_pycortex_config_file, eventsMatrix
 
 # GLM imports
 # ----------------
@@ -72,15 +72,27 @@ mount_dir =  sys.argv[1]
 # mount_dir = '/Users/martinszinte/disks/meso_S/data/PredictEye/'
 subject = sys.argv[2]
 session = sys.argv[3]
-task = sys.argv[4] # PurVELoc
-space = sys.argv[5] #'T1w'
-run = sys.argv[6] #'run-1'
-preproc = sys.argv[7] #'fmriprep_dct'
-save_svg = sys.argv[8] # 0
+task = sys.argv[4] 
+space = sys.argv[5] 
+run = sys.argv[6] 
+preproc = sys.argv[7] 
+save_svg = sys.argv[8]
 if save_svg == 1: save_svg = True
 else: save_svg = False
 webapp = sys.argv[9] #0
 plot_tc = sys.argv[10] #1
+
+# Define analysis parameters
+# --------------------------
+with open('../settings.json') as f:
+    json_s = f.read()
+    analysis_info = json.loads(json_s)
+
+# Define folder
+# -------------
+xfm_name = "identity.fmriprep"
+base_dir = "{}".format(mount_dir)
+deriv_dir = "{}/pp_data/{}/glm/fit".format(base_dir,subject)
 
 # Set pycortex db and colormaps
 # -----------------------------
@@ -99,26 +111,14 @@ add_roi = False
 cmap = 'RdBu_r_alpha'
 cmap_steps = 255
 
-# Define analysis parameters
-# --------------------------
-with open('../settings.json') as f:
-    json_s = f.read()
-    analysis_info = json.loads(json_s)
-
-# Define folder
-# -------------
-xfm_name = "identity.fmriprep"
-base_dir = "{}".format(mount_dir)
-deriv_dir = "{}/pp_data/{}/glm/fit".format(base_dir,subject)
-
 task_name = [task[:3], 'Fix' ]
 
 
 file_img = "{cwd}/pp_data/{subject}/func/{subject}_task-{task}_space-{space}_{preproc}_avg.nii.gz".\
                 format(cwd=mount_dir, subject=subject,task=task,space=space,preproc=preproc)
 
-file_mask_img = '{cwd}/deriv_data/fmriprep/fmriprep/{subject}/{session}/func/{subject}_{session}_task-{task}_{run}_space-{space}_desc-brain_mask.nii.gz'.\
-                format(cwd=mount_dir, subject=subject, session=session, task=task, run=run, space=space)
+file_mask_img = '{cwd}/deriv_data/fmriprep/fmriprep/{subject}/{session}/func/{subject}_{session}_task-{task}_run-1_space-{space}_desc-brain_mask.nii.gz'.\
+                format(cwd=mount_dir, subject=subject, session=session, task=task, space=space)
 
 
 output_folder = '{cwd}/pp_data/{subject}/glm/fit/'.format(cwd=mount_dir, subject=subject)
@@ -133,7 +133,7 @@ except:
 # create design table
 design_file_run1 = '{cwd}/bids_data/{subject}/{session}/func/{subject}_{session}_task-{task}_{run}_events.tsv'.\
                     format(cwd=mount_dir, subject=subject, session=session, task=task, run='run-01')
-events_glm = eventsMatrix(design_file_run1)
+events_glm = eventsMatrix(design_file_run1, task)
 
 
 
@@ -153,8 +153,8 @@ fmri_glm = fmri_glm.fit(fmri_img, events_glm)
 
 # design matrix
 design_matrix = fmri_glm.design_matrices_[0]
-plot_design_matrix(design_matrix)
-plt.show()
+# plot_design_matrix(design_matrix)
+# plt.show()
 
 # contrast
 if 'VE' not in task:

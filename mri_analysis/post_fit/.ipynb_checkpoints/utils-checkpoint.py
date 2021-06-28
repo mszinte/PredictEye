@@ -461,16 +461,18 @@ def mask_nifti_2_hdf5(deriv_file, tc_file, mask_file_L, mask_file_R, hdf5_file, 
     return None
 
 
-def eventsMatrix(design_file):
+def eventsMatrix(design_file, task):
     """
     Returns the events matrix for the GLM. Works for the Sac/Pur Localisers and Sac/Pur Visual/Endogenous Localisers
     Parameters
     ----------
-    design_file         : path to the tsv file
+    design_file         : path to the tsv/csv file containing the events
+    task                : task name (SacLoc / PurLoc / SacVELoc / PurVELoc)
     Returns
     -------
     new_events_glm - pandas DataFrame containing the events for the GLM 
     """
+    import pandas as pd
     
     tr_dur = 1.2
     events = pd.read_table(design_file)
