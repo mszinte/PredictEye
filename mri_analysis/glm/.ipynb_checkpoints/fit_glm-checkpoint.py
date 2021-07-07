@@ -88,6 +88,8 @@ file_mask_img = '{base_dir}/deriv_data/fmriprep/fmriprep/{subject}/{session}/fun
                 format(base_dir=base_dir, subject=subject, session=session, task=task, space=space)
 glm_folder = '{base_dir}/pp_data/{subject}/glm/fit/'.format(base_dir=base_dir, subject=subject)
 
+glm_alpha = analysis_info['glm_alpha']
+
 try: os.makedirs(glm_folder)
 except: pass
 
@@ -132,31 +134,43 @@ for contrast in contrasts:
     
     print('{}'.format(output_fn))
     
+    # stats maps
     eff_map = fmri_glm.compute_contrast(contrasts[contrast],
                                         output_type='effect_size')
-
+    
     z_map = fmri_glm.compute_contrast(contrasts[contrast],
                                         output_type='z_score')
 
-    p_map = 1 - stats.norm.cdf(abs(z_map.dataobj))
-
-    # stats maps
-    glm_alpha = analysis_info['glm_alpha']
+    z_p_map = 2*(1 - stats.norm.cdf(abs(z_map.dataobj)))
+        
     fdr_map, th = threshold_stats_img(z_map, alpha=glm_alpha, height_control='fdr')
+    fdr_p_map = 2*(1 - stats.norm.cdf(abs(fdr_map.dataobj)))
+    
     fdr_cluster10_map, th = threshold_stats_img(z_map, alpha=glm_alpha, height_control='fdr', cluster_threshold=10)
+    fdr_cluster10_p_map = 2*(1 - stats.norm.cdf(abs(fdr_cluster10_map.dataobj)))
+    
     fdr_cluster50_map, th = threshold_stats_img(z_map, alpha=glm_alpha, height_control='fdr', cluster_threshold=50)
+    fdr_cluster50_p_map = 2*(1 - stats.norm.cdf(abs(fdr_cluster50_map.dataobj)))
+                             
     fdr_cluster100_map, th = threshold_stats_img(z_map, alpha=glm_alpha, height_control='fdr', cluster_threshold=100)
-
+    fdr_cluster100_p_map = 2*(1 - stats.norm.cdf(abs(fdr_cluster100_map.dataobj)))
+                              
     # Save results
     img = nb.load(file_img)
-    deriv = np.zeros((img.shape[0],img.shape[1],img.shape[2],6))*np.nan
-    deriv[...,0]  = z_map.dataobj
-    deriv[...,1]  = p_map
-    deriv[...,2]  = fdr_map.dataobj
-    deriv[...,3]  = fdr_cluster10_map.dataobj
-    deriv[...,4]  = fdr_cluster50_map.dataobj
-    deriv[...,5]  = fdr_cluster100_map.dataobj
-
+    deriv = np.zeros((img.shape[0],img.shape[1],img.shape[2],11))*np.nan
+    
+    deriv[...,0]  = eff_map.dataobj
+    deriv[...,1]  = z_map.dataobj
+    deriv[...,2]  = z_p_map
+    deriv[...,3]  = fdr_map.dataobj
+    deriv[...,4]  = fdr_p_map
+    deriv[...,5]  = fdr_cluster10_map.dataobj
+    deriv[...,6]  = fdr_cluster10_p_map
+    deriv[...,7]  = fdr_cluster50_map.dataobj
+    deriv[...,8]  = fdr_cluster50_p_map
+    deriv[...,9]  = fdr_cluster100_map.dataobj
+    deriv[...,10] = fdr_cluster100_p_map
+                              
     deriv = deriv.astype(np.float32)
     new_img = nb.Nifti1Image(dataobj = deriv, affine = img.affine, header = img.header)
     new_img.to_filename(output_fn)

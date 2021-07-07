@@ -3,33 +3,31 @@
 pycortex_maps.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Display cortical data with pycortex 
+Create flatmap plots and dataset
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: local mount of mesocentre disk (e.g. ~/disks/meso_S/)
 sys.argv[2]: subject name (e.g. 'sub-001')
 sys.argv[3]: task (e.g. pRF, pMF)
 sys.argv[4]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
-sys.argv[4]: registration (e.g. T1w)
-sys.argv[6]: save SVG (0  = No, 1 = Yes)
-sys.argv[7]: save timecourses
-sys.argv[8]: send to webapp 
-sys.argv[9]: sub_task (e.g. 'sac', 'sp')
+sys.argv[5]: registration (e.g. T1w)
+sys.argv[6]: save in SVG file (0  = No, 1 = Yes)
+sys.argv[7]: sub_task (e.g. 'sac', 'sp')
 -----------------------------------------------------------------------------------------
 Output(s):
 pycortex flat maps figures
 -----------------------------------------------------------------------------------------
 To run:
+On invibe server
 >> cd to function
->> python post_fit/pycortex_maps.py [mount] [subject] [task] [preproc] [reg] [svg] 
-                                                             [tc] [webapp] [sub_task] 
+>> python post_fit/pycortex_maps.py [base_dir] [subject] [task] [preproc] 
+                                                          [reg] [svg] [sub_task]
 -----------------------------------------------------------------------------------------
 Exemple:
 cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
-python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pRF fmriprep_dct T1w 0 0 1 
-python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pRF fmriprep_dct T1w 0 1 0
-python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pMF fmriprep_dct T1w 0 0 0 sac
-python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pMF fmriprep_dct T1w 0 0 0 sp
+python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pRF fmriprep_dct T1w 0
+python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pMF fmriprep_dct T1w 0 sac
+python post_fit/pycortex_maps.py ~/disks/meso_S sub-01 pMF fmriprep_dct T1w 0 sp
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -61,7 +59,7 @@ from utils import draw_cortex_vertex, set_pycortex_config_file
 
 # Get inputs
 # ----------
-mount_dir = sys.argv[1]
+base_dir = sys.argv[1]
 subject = sys.argv[2]
 task = sys.argv[3]
 preproc = sys.argv[4]
@@ -69,10 +67,8 @@ regist_type = sys.argv[5]
 save_svg = int(sys.argv[6])
 if save_svg == 1: save_svg = True
 else: save_svg = False
-plot_tc = int(sys.argv[7])
-webapp = int(sys.argv[8])
-if len(sys.argv) < 10: sub_task = ''
-else: sub_task = sys.argv[9]
+if len(sys.argv) < 8: sub_task = ''
+else: sub_task = sys.argv[7]
 
 # Define analysis parameters
 # --------------------------
@@ -82,8 +78,8 @@ with open('settings.json') as f:
 
 # Define folder
 # -------------
-xfm_name = "identity.fmriprep"
-base_dir = "{}/data/PredictEye".format(mount_dir)
+xfm_name = analysis_info["xfm_name"]
+base_dir = "{}/data/PredictEye".format(base_dir)
 deriv_dir = "{}/pp_data/{}/gauss/fit/{}".format(base_dir,subject, task)
 
 # Set pycortex db and colormaps
@@ -95,15 +91,15 @@ set_pycortex_config_file(base_dir)
 rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
     amp_idx, baseline_idx, cov_idx, x_idx, y_idx = 0,1,2,3,4,5,6,7,8,9
 
-cmap_polar = 'hsv2'
-cmap_uni = 'Reds2'
-cmap_ecc_size = 'Spectral2'
+cmap_polar = 'hsv'
+cmap_uni = 'Reds'
+cmap_ecc_size = 'Spectral'
 col_offset = 1.0/14.0
 cmap_steps = 255
 
 print('save pycortex flatmaps')
 maps_names = []
-flatmaps_dir = '{}/pp_data/{}/gauss/pycortex_outputs/flatmaps'.format(base_dir, subject)
+flatmaps_dir = '{}/pp_data/{}/gauss/pycortex_outputs/flatmaps/prf'.format(base_dir, subject)
 webviewer_dir = '{base_dir}/pp_data/{subject}/gauss/pycortex_outputs/webviewer/{subject}_{task}{sub_task}_{reg}_{preproc}'.format(
     base_dir=base_dir, subject=subject, task=task, sub_task=sub_task, reg=regist_type, preproc=preproc)
 
@@ -161,53 +157,21 @@ if task == 'pRF':
 volumes = {}
 for maps_name in maps_names:
 
+    # create flatmap
     roi_name = '{}_{}{}_{}_{}'.format(maps_name, task, sub_task, regist_type, preproc)
     roi_param = {'subject': subject, 'xfmname': xfm_name, 'roi_name': roi_name}
     print(roi_name)
     exec('param_{}.update(roi_param)'.format(maps_name))
     exec('volume_{maps_name} = draw_cortex_vertex(**param_{maps_name})'.format(maps_name=maps_name))
-    
-    exec("plt.savefig('{}/{}_task-{}{}_space-{}_{}.pdf')".format(flatmaps_dir, maps_name, task, sub_task, regist_type, preproc))
+    exec("plt.savefig('{}/{}_space-{}_{}_prf_{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, maps_name))
     plt.close()
+    
+    # save flatmap as dataset
     exec('vol_description = param_{}["description"]'.format(maps_name))
     exec('volume = volume_{}'.format(maps_name))
     volumes.update({vol_description:volume})
 
-print('save pycortex webviewer')
-cortex.webgl.make_static(outpath=webviewer_dir, data=volumes, recache=True)
-
-# Send to webapp
-# --------------
-if webapp == 1:
-    
-    webapp_dir = analysis_info['webapp_dir']
-    os.system('rsync -avuz --progress {local_dir} {webapp_dir}'.format(local_dir=webviewer_dir, webapp_dir=webapp_dir))
-
-
-# TC data
-# -------
-if plot_tc == 1:
-
-    # load volume
-    print('load: {} time course'.format(task))
-    tc_file = "{base_dir}/pp_data/{subject}/func/{subject}_task-{task}_space-{reg}_{preproc}_avg.nii.gz".format(
-        base_dir=base_dir, subject=subject, task=task, reg=regist_type, preproc=preproc)
-    img_tc = nb.load(tc_file)
-    tc = img_tc.get_fdata()
-
-    # create directory
-    webviewer_dir = '{base_dir}/pp_data/{subject}/gauss/pycortex_outputs/webviewer/{subject}_{task}_{reg}_{preproc}_tc'.format(
-                base_dir= base_dir, subject=subject, task=task, reg=regist_type, preproc=preproc)
-
-    try:
-        os.makedirs(webviewer_dir)
-    except:
-        pass
-    
-    # create volume
-    volume_tc = cortex.Volume(data=tc.transpose((3,2,1,0)), subject=subject, xfmname=xfm_name, cmap='BuBkRd', description='BOLD')
-
-    # create webgl
-    print('save pycortex webviewer: time course {}'.format(task))
-    cortex.webgl.make_static(outpath = webviewer_dir, data = volume_tc)
-
+# save dataset
+dataset_file = "{}/{}_space-{}_prf.hdf".format(flatmaps_dir, subject, regist_type, preproc)
+dataset = cortex.Dataset(data = volumes)
+dataset.save(dataset_file)

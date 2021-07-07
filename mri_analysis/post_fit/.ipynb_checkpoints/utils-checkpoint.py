@@ -3,9 +3,9 @@ def set_pycortex_config_file(data_folder):
     # Import necessary modules
     import os
     import cortex
-    # import ipdb
+    import ipdb
     from pathlib import Path
-    # deb = ipdb.set_trace
+    deb = ipdb.set_trace
 
     # Define the new database and colormaps folder
     pycortex_db_folder = data_folder + '/pp_data/cortex/db/'
@@ -221,11 +221,14 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
     import matplotlib.colors as colors
     from matplotlib import cm
     import matplotlib as mpl
-    # import ipdb
-    # deb = ipdb.set_trace
+    import ipdb
+    deb = ipdb.set_trace
     
     # define colormap
-    base = cortex.utils.get_cmap(cmap)
+    try:
+        base = plt.cm.get_cmap(cmap)
+    except:
+        base = cortex.utils.get_cmap(cmap)
         
     if '_alpha' in cmap: base.colors = base.colors[1,:,:]
     val = np.linspace(0, 1,cmap_steps+1,endpoint=False)
@@ -239,6 +242,7 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
         alpha = alpha*255.0
 
         # define volume RGB
+        
 
         volume = cortex.VolumeRGB(  channel1 = mat[...,0].T.astype(np.uint8),
                                     channel2 = mat[...,1].T.astype(np.uint8),
@@ -273,7 +277,10 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
    
     if cbar == 'polar':
         
-        base = cortex.utils.get_cmap(cmap)
+        try:
+            base = plt.cm.get_cmap(cmap)
+        except:
+            base = cortex.utils.get_cmap(cmap)
         val = np.arange(1,cmap_steps+1)/cmap_steps - (1/(cmap_steps*2))
         val = np.fmod(val+col_offset,1)
         colmap = colors.LinearSegmentedColormap.from_list('my_colmap',base(val),N = cmap_steps)

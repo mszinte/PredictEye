@@ -1,7 +1,7 @@
 # __*PredictEye*__
-By :      Martin SZINTE & Vanessa MORITA 
-With :    Anna MONTAGNINI & Guillaume MASSON
-Version:  1.0
+By :      Martin SZINTE & Vanessa MORITA <br>
+With :    Anna MONTAGNINI & Guillaume MASSON<br>
+Version:  1.0<br>
 
 # Version description
 Set of 5 experiments to determine the retinotopic organisation of the human
@@ -43,7 +43,7 @@ the ocumotor system.
 ### pRFexp
   1. run the prf fit with _fit/submit_fit.py_
   2. combine fits and compute pRF parameters with _post_fit/post_fit.py_
-  3. make pycortex maps using _post_fit/pycortex_maps.py_
+  3. make pycortex maps using _post_fit/pycortex_maps.py_ or with _post_fit/run_prf_maps.sh_
   4. draw ROIs using on overlays using Inkscape
   5. create hdf files per roi using _post_fit/roi_to_hdf5.py_
   6. create pandas files per roi using _post_fit/hdf5_to_pandas.py_
@@ -65,7 +65,10 @@ the ocumotor system.
   5. locVisEndEMexp:
 
 ### GLMs
-  1. Compute GLM for each tasks with _glm/fit_glm.py_
-  2. Plot and save flatmaps with _glm/pycortex_glm.py_
-  
+  1. Compute GLM for each tasks with _glm/fit_glm.py_ or with _glm/run_glm.sh_
+  2. Plot and save flatmaps with _glm/pycortex_glm.py_ or with _glm/run_glm_maps.sh_
+
+### Webgl
+  1. Combine PRF and GLM analysis in single webgl per subject using _webgl/pycortex_webgl.py_ or _webgl/run_webgl.sh_
+  2. send index.py to webapp using _webgl/send_index.sh_
   

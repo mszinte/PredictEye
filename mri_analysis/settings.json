@@ -49,6 +49,6 @@
     "trs_eye_mov": 32,
     "glm_noise_model": "ar1",
     "glm_alpha": 0.01,
-    "glm_vmin":[-3.5, 0.99],
-    "glm_vmax":[3.5, 0.9999]
+    "glm_vmin":[-3.5, 0.01],
+    "glm_vmax":[3.5, 0]
 }

@@ -53,7 +53,7 @@ from utils import draw_cortex_vertex, set_pycortex_config_file
 # ----------
 base_dir =  sys.argv[1]
 subject = sys.argv[2]
-space = sys.argv[3] 
+regist_type = sys.argv[3]
 preproc = sys.argv[4]
 
 glm_dir = '{base_dir}/pp_data/{subject}/glm/fit'.format(base_dir=base_dir, subject=subject)
@@ -72,11 +72,11 @@ set_pycortex_config_file(base_dir)
 # Pycortex plots
 # --------------
 xfm_name = analysis_info["xfm_name"]
-cmap = 'RdBu_r_alpha'
+cmap = 'RdBu_r'
 cmap_steps = 255
 glm_vmin = analysis_info["glm_vmin"]
 glm_vmax = analysis_info["glm_vmax"]
-maps_names = {'z_map':0, 'fdr_map':2, 'fdr_c10_map':3, 'fdr_c50_map':4, 'fdr_c100_map':5}
+maps_names = {'z_map':1, 'fdr_map':3, 'fdr_c10_map':5, 'fdr_c50_map':7, 'fdr_c100_map':9}
 
 volumes = {}
 for glm_file in glm_files:
@@ -88,6 +88,8 @@ for glm_file in glm_files:
     
     contrast = glm_file.split("_")[-1][4:-7]
 
+    
+    
     flatmaps_dir = '{}/pp_data/{}/glm/pycortex_outputs/flatmaps/{}'.format(base_dir, subject, contrast)
     try: os.makedirs(flatmaps_dir)
     except: pass
@@ -95,19 +97,22 @@ for glm_file in glm_files:
     volumes = {}
     param = dict()
     for map_name in maps_names:
-        alpha = 1-glm_mat[...,1] # 1= pvalue
-        data  = glm_mat[...,maps_names[map_name]]
         
+        # compute alpha
+        pval = glm_mat[...,maps_names[map_name]+1]
+        pval_range = (pval - glm_vmin[1])/ (glm_vmax[1] - glm_vmin[1])
+        pval_range[pval_range<0] = 0
+        alpha = pval_range
+
+        data  = glm_mat[...,maps_names[map_name]]
         param[map_name] = {'subject':subject, 'data': data, 'xfmname': xfm_name, 'cmap': cmap, 'alpha': alpha,\
-                           'volume_type': 'Volume2D', 'vmin': glm_vmin,'vmax': glm_vmax, \
-                           'cbar': 'discrete', 'description': '{}: {}'.format(contrast,map_name),\
-                           'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
+                           'vmin': glm_vmin[0],'vmax': glm_vmax[0], 'cbar': 'discrete', \
+                           'description': '{}: {}'.format(contrast,map_name), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
 
         # create flatmap
         exec('volume_{map_name} = draw_cortex_vertex(**param[\'{map_name}\'])'.format(map_name=map_name))
-        exec("plt.savefig('{}/{}_space-{}_{}_glm_{}_{}.pdf')".format(flatmaps_dir, subject, space, preproc, contrast, map_name))
+        exec("plt.savefig('{}/{}_space-{}_{}_glm_{}_{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, contrast, map_name))
         plt.close()
-        
         
         # save flatmap as dataset
         exec('vol_description = param[\'{map_name}\']["description"]'.format(map_name=map_name))
@@ -115,6 +120,6 @@ for glm_file in glm_files:
         volumes.update({vol_description:volume})
     
     # save dataset
-    dataset_file = "{}/{}_space-{}_{}_glm_{}.hdf".format(flatmaps_dir, subject, space, preproc, contrast)
+    dataset_file = "{}/{}_space-{}_{}_glm_{}.hdf".format(flatmaps_dir, subject, regist_type, preproc, contrast)
     dataset = cortex.Dataset(data = volumes)
     dataset.save(dataset_file)

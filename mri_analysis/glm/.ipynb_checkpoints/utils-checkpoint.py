@@ -153,12 +153,16 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
     import matplotlib.colors as colors
     from matplotlib import cm
     import matplotlib as mpl
-    # import ipdb
-    # deb = ipdb.set_trace
+    import ipdb
+    
+    deb = ipdb.set_trace
     
     # define colormap
-    base = cortex.utils.get_cmap(cmap)
-        
+    try:
+        base = plt.cm.get_cmap(cmap)
+    except:
+        base = cortex.utils.get_cmap(cmap)
+
     if '_alpha' in cmap: base.colors = base.colors[1,:,:]
     val = np.linspace(0, 1,cmap_steps+1,endpoint=False)
     colmap = colors.LinearSegmentedColormap.from_list('my_colmap',base(val), N = cmap_steps)
@@ -171,7 +175,6 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
         alpha = alpha*255.0
 
         # define volume RGB
-
         volume = cortex.VolumeRGB(  channel1 = mat[...,0].T.astype(np.uint8),
                                     channel2 = mat[...,1].T.astype(np.uint8),
                                     channel3 = mat[...,2].T.astype(np.uint8),
