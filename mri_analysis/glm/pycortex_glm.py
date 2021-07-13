@@ -47,7 +47,10 @@ import cortex
 
 # Functions import
 # ----------------
-from utils import draw_cortex_vertex, set_pycortex_config_file
+import importlib.util
+spec = importlib.util.spec_from_file_location("Utils", "./functions/utils.py") 
+utils = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(utils)
 
 # Get inputs
 # ----------
@@ -67,7 +70,7 @@ with open('settings.json') as f:
 
 # Set pycortex db and colormaps
 # -----------------------------
-set_pycortex_config_file(base_dir)
+utils.set_pycortex_config_file(base_dir)
 
 # Pycortex plots
 # --------------
@@ -110,7 +113,7 @@ for glm_file in glm_files:
                            'description': '{}: {}'.format(contrast,map_name), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
 
         # create flatmap
-        exec('volume_{map_name} = draw_cortex_vertex(**param[\'{map_name}\'])'.format(map_name=map_name))
+        exec('volume_{map_name} = utils.draw_cortex_vertex(**param[\'{map_name}\'])'.format(map_name=map_name))
         exec("plt.savefig('{}/{}_space-{}_{}_glm_{}_{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, contrast, map_name))
         plt.close()
         

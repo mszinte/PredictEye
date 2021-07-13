@@ -51,14 +51,15 @@ import nibabel as nb
 
 # Functions import
 # ----------------
-from utils import eventsMatrix
+import importlib.util
+spec = importlib.util.spec_from_file_location("Utils", "./functions/utils.py") 
+utils = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(utils)
 
 # GLM imports
 # -----------
-from nilearn import image, datasets, plotting, surface
 from nilearn.glm.first_level import FirstLevelModel
 from nilearn.glm import threshold_stats_img
-from nilearn.plotting import plot_design_matrix, plot_stat_map, plot_anat, plot_img
 
 # Get inputs
 # ----------
@@ -96,7 +97,7 @@ except: pass
 # create design table
 design_file_run1 = '{base_dir}/bids_data/{subject}/{session}/func/{subject}_{session}_task-{task}_{run}_events.tsv'.\
                     format(base_dir=base_dir, subject=subject, session=session, task=task, run='run-01')
-events_glm = eventsMatrix(design_file_run1, task)
+events_glm = utils.eventsMatrix(design_file_run1, task)
 
 # first level GLM
 mask_img = nb.load(file_mask_img)
