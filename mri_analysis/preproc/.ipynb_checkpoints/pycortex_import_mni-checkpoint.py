@@ -1,9 +1,9 @@
 """
 -----------------------------------------------------------------------------------------
-pycortex_import.py
+pycortex_import_mni.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Import subject in pycortex
+Import MNI subject in pycortex
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: subject name
@@ -13,9 +13,9 @@ None
 -----------------------------------------------------------------------------------------
 To run:
 cd /home/mszinte/projects/PredictEye/mri_analysis/
-python preproc/pycortex_import.py sub-01
+python preproc/pycortex_import_mni.py sub-01
 -----------------------------------------------------------------------------------------
-Written by Martin Szinte (martin.szinte@gmail.com)
+Written by Martin Szinte (martin.szinte@gmail.com), adapted by Vanessa M
 -----------------------------------------------------------------------------------------
 """
 
@@ -62,7 +62,7 @@ base_dir = analysis_info['base_dir']
 fmriprep_dir = "{base_dir}/deriv_data/fmriprep/".format(base_dir = base_dir)
 fs_dir = "{base_dir}/deriv_data/fmriprep/freesurfer/".format(base_dir = base_dir)
 temp_dir = "{base_dir}/temp_data/{subject}_rand_ds/".format(base_dir = base_dir, subject = subject)
-xfm_name = "identity.fmriprep"
+xfm_name = "identity_mni.fmriprep"
 cortex_dir = "{base_dir}/pp_data/cortex/db/{subject}".format(base_dir = base_dir, subject = subject)
 
 # Set pycortex db and colormaps
@@ -71,8 +71,9 @@ set_pycortex_config_file(base_dir)
 
 # Add participant to pycortex db
 # ------------------------------
-print('import subject in pycortex')
-cortex.freesurfer.import_subj(fs_subject = subject, cx_subject = subject, freesurfer_subject_dir = fs_dir, whitematter_surf = 'smoothwm')
+# print('import subject in pycortex')
+# try: cortex.freesurfer.import_subj(fs_subject = subject, cx_subject = subject, freesurfer_subject_dir = fs_dir, whitematter_surf = 'smoothwm')
+# except: pass
 
 # Add participant flat maps
 # -------------------------
@@ -83,7 +84,7 @@ except: pass
 # Add transform to pycortex db
 # ----------------------------
 file_list = sorted(glob.glob("{base_dir}/pp_data/{sub}/func/*.nii.gz".format(base_dir = base_dir, sub = subject)))
-file_list = [x for x in file_list if 'T1w' in x]
+file_list = [x for x in file_list if 'MNI152NLin2009cAsym' in x]
 ref_file = file_list[0]
  
 transform = cortex.xfm.Transform(np.identity(4), ref_file)
