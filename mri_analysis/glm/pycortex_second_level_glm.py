@@ -7,9 +7,8 @@ Generate flatmaps for glm analysis
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: base_dir (e.g. )
-sys.argv[2]: subject name (e.g. sub-01)
-sys.argv[3]: registration (e.g. T1w)
-sys.argv[4]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
+sys.argv[2]: task
+sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
 -----------------------------------------------------------------------------------------
 Output(s):
 GLM output on a flatmap
@@ -17,11 +16,11 @@ GLM output on a flatmap
 To run:
 On invibe server
 >> cd to function
->> python glm/pycortex_glm.py [base_dir] [subject] [task] [reg] [preproc]
+>> python glm/pycortex_glm.py [base_dir] [subject] [task] [preproc]
 -----------------------------------------------------------------------------------------
 Example:
 cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
-python glm/pycortex_glm.py ~/disks/meso_S/data/PredictEye sub-01 T1w fmriprep_dct
+python glm/pycortex_second_level_glm.py ~/disks/meso_S/data/PredictEye fmriprep_dct
 -----------------------------------------------------------------------------------------
 """
 
@@ -55,11 +54,13 @@ spec.loader.exec_module(utils)
 # Get inputs
 # ----------
 base_dir =  sys.argv[1]
-subject = sys.argv[2]
-regist_type = sys.argv[3]
-preproc = sys.argv[4]
+task = sys.argv[2]
+preproc = sys.argv[3]
 
-glm_dir = '{base_dir}/pp_data/{subject}/glm/fit'.format(base_dir=base_dir, subject=subject)
+subject = 'sub-00'
+regist_type = 'MNI152NLin2009cAsym'
+
+glm_dir = '{base_dir}/pp_data/{subject}/glm/second_level'.format(base_dir=base_dir, subject=subject)
 glm_files = os.listdir(glm_dir)
 glm_files =[x for x in glm_files if regist_type in x]
 
@@ -80,7 +81,7 @@ cmap = 'RdBu_r'
 cmap_steps = 255
 glm_vmin = analysis_info["glm_vmin"]
 glm_vmax = analysis_info["glm_vmax"]
-maps_names = {'z_map':1, 'fdr_map':3, 'fdr_c10_map':5, 'fdr_c50_map':7, 'fdr_c100_map':9}
+maps_names = {'z_map':1, 'fdr_map':6, 'fdr_c10_map':11, 'fdr_c50_map':16, 'fdr_c100_map':21}
 
 volumes = {}
 for glm_file in glm_files:
@@ -92,7 +93,7 @@ for glm_file in glm_files:
     
     contrast = glm_file.split("_")[-1][4:-7]    
     
-    flatmaps_dir = '{}/pp_data/{}/glm/pycortex_outputs/flatmaps/{}'.format(base_dir, subject, contrast)
+    flatmaps_dir = '{}/pycortex_outputs/flatmaps/{}'.format(glm_dir, contrast)
     try: os.makedirs(flatmaps_dir)
     except: pass
     
@@ -101,7 +102,7 @@ for glm_file in glm_files:
     for map_name in maps_names:
         
         # compute alpha
-        pval = glm_mat[...,maps_names[map_name]+1]
+        pval = glm_mat[...,maps_names[map_name]+3] # getting permutation test p-values
         pval_range = (pval - glm_vmin[1])/ (glm_vmax[1] - glm_vmin[1])
         pval_range[pval_range<0] = 0
         alpha = pval_range

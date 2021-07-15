@@ -47,7 +47,10 @@ import cortex
 
 # Functions import
 # ----------------
-from utils import draw_cortex_vertex, set_pycortex_config_file
+import importlib.util
+spec = importlib.util.spec_from_file_location("Utils", "./functions/utils.py") 
+utils = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(utils)
 
 # Get inputs
 # ----------
@@ -58,6 +61,7 @@ preproc = sys.argv[4]
 
 glm_dir = '{base_dir}/pp_data/{subject}/glm/fit'.format(base_dir=base_dir, subject=subject)
 glm_files = os.listdir(glm_dir)
+glm_files =[x for x in glm_files if regist_type in x]
 
 # Define analysis parameters
 # --------------------------
@@ -67,11 +71,11 @@ with open('settings.json') as f:
 
 # Set pycortex db and colormaps
 # -----------------------------
-set_pycortex_config_file(base_dir)
+utils.set_pycortex_config_file(base_dir)
 
 # Pycortex plots
 # --------------
-xfm_name = analysis_info["xfm_name"]
+xfm_name = 'identity.fmriprep' if regist_type=='T1w' else 'identity_mni.fmriprep'
 cmap = 'RdBu_r'
 cmap_steps = 255
 glm_vmin = analysis_info["glm_vmin"]
@@ -86,9 +90,7 @@ for glm_file in glm_files:
     img_deriv_mat = nb.load('{}/{}'.format(glm_dir,glm_file))
     glm_mat = img_deriv_mat.get_fdata()
     
-    contrast = glm_file.split("_")[-1][4:-7]
-
-    
+    contrast = glm_file.split("_")[-1][4:-7]    
     
     flatmaps_dir = '{}/pp_data/{}/glm/pycortex_outputs/flatmaps/{}'.format(base_dir, subject, contrast)
     try: os.makedirs(flatmaps_dir)
@@ -110,7 +112,7 @@ for glm_file in glm_files:
                            'description': '{}: {}'.format(contrast,map_name), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
 
         # create flatmap
-        exec('volume_{map_name} = draw_cortex_vertex(**param[\'{map_name}\'])'.format(map_name=map_name))
+        exec('volume_{map_name} = utils.draw_cortex_vertex(**param[\'{map_name}\'])'.format(map_name=map_name))
         exec("plt.savefig('{}/{}_space-{}_{}_glm_{}_{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, contrast, map_name))
         plt.close()
         
