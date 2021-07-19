@@ -37,8 +37,8 @@ import sys
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-import ipdb
-deb = ipdb.set_trace
+import pdb
+deb = pdb.set_trace
 
 # MRI imports
 # -----------
@@ -59,7 +59,7 @@ subject = sys.argv[2]
 regist_type = sys.argv[3]
 preproc = sys.argv[4]
 
-glm_dir = '{base_dir}/pp_data/{subject}/glm/fit'.format(base_dir=base_dir, subject=subject)
+glm_dir = '{base_dir}/pp_data/{subject}/glm/fit/'.format(base_dir=base_dir, subject=subject)
 glm_files = os.listdir(glm_dir)
 glm_files =[x for x in glm_files if regist_type in x]
 

@@ -25,6 +25,7 @@ python preproc/pybest_sbatch.py [main directory] [project name] [subject num]
 -----------------------------------------------------------------------------------------
 Exemple:
 python preproc/pybest_sbatch.py /scratch/mszinte/data PredictEye sub-01 T1w 20 martin.szinte
+python preproc/pybest_sbatch.py /scratch/mszinte/data PredictEye sub-01 MNI152NLin2009cAsym 20 martin.szinte
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------

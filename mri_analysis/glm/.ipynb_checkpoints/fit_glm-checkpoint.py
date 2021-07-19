@@ -26,6 +26,7 @@ Example:
 cd ~/projects/PredictEye/mri_analysis/
 python glm/fit_glm.py /scratch/mszinte/data/PredictEye sub-01 ses-01 SacLoc T1w run-1 fmriprep_dct
 python glm/fit_glm.py /scratch/mszinte/data/PredictEye sub-01 ses-01 PurLoc T1w run-1 fmriprep_dct
+python glm/fit_glm.py /scratch/mszinte/data/PredictEye sub-02 ses-02 SacVELoc T1w run-1 fmriprep_dct
 -----------------------------------------------------------------------------------------
 """
 
@@ -42,8 +43,8 @@ import json
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
-import ipdb
-deb = ipdb.set_trace
+import pdb
+deb = pdb.set_trace
 
 # MRI imports
 # -----------
@@ -51,14 +52,15 @@ import nibabel as nb
 
 # Functions import
 # ----------------
-from utils import eventsMatrix
+import importlib.util
+spec = importlib.util.spec_from_file_location("Utils", "./functions/utils.py") 
+utils = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(utils)
 
 # GLM imports
 # -----------
-from nilearn import image, datasets, plotting, surface
 from nilearn.glm.first_level import FirstLevelModel
 from nilearn.glm import threshold_stats_img
-from nilearn.plotting import plot_design_matrix, plot_stat_map, plot_anat, plot_img
 
 # Get inputs
 # ----------
@@ -93,10 +95,11 @@ glm_alpha = analysis_info['glm_alpha']
 try: os.makedirs(glm_folder)
 except: pass
 
+
 # create design table
 design_file_run1 = '{base_dir}/bids_data/{subject}/{session}/func/{subject}_{session}_task-{task}_{run}_events.tsv'.\
                     format(base_dir=base_dir, subject=subject, session=session, task=task, run='run-01')
-events_glm = eventsMatrix(design_file_run1, task)
+events_glm = utils.eventsMatrix(design_file_run1, task)
 
 # first level GLM
 mask_img = nb.load(file_mask_img)
@@ -118,13 +121,20 @@ if task == 'SacLoc':
 elif task == 'PurLoc':
     exec('conditions = { task_name[1]: np.array([1., 0., 0.]), task_name[0]: np.array([0., 1., 0.])}')
     contrasts = {  'Pur-Fix':conditions[task_name[0]] - conditions[task_name[1]]}
-else:
-    conditions = {  'Fix': np.array([1., 0., 0., 0.]),
-                    'Vis': np.array([0., 1., 0., 0.]),
-                    'End': np.array([0., 0., 1., 0.])}
-    contrasts = {   'Vis-End': conditions['Vis'] - conditions['End'],
-                    'Vis-Fix': conditions['Vis'] - conditions['Fix'],
-                    'End-Fix': conditions['End'] - conditions['Fix']}
+elif task == 'SacVELoc':
+    conditions = {  'Fix':     np.array([1., 0., 0., 0.]),
+                    'SacExo':  np.array([0., 0., 1., 0.]),
+                    'SacEndo': np.array([0., 1., 0., 0.])}
+    contrasts = {   'SacExo-SacEndo': conditions['SacExo'] - conditions['SacEndo'],
+                    'SacExo-Fix':     conditions['SacExo'] - conditions['Fix'],
+                    'SacEndo-Fix':    conditions['SacEndo'] - conditions['Fix']}
+elif task == 'PurVELoc':
+    conditions = {  'Fix':     np.array([1., 0., 0., 0.]),
+                    'PurExo':  np.array([0., 0., 1., 0.]),
+                    'PurEndo': np.array([0., 1., 0., 0.])}
+    contrasts = {   'PurExo-PurEndo': conditions['PurExo'] - conditions['PurEndo'],
+                    'PurExo-Fix':     conditions['PurExo'] - conditions['Fix'],
+                    'PurEndo-Fix':    conditions['PurEndo'] - conditions['Fix']}
 
 # compute glm maps
 for contrast in contrasts:
