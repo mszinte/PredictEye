@@ -94,7 +94,7 @@ slurm_cmd = """\
 											anat_only_end = anat_only_end, memory_val = memory_val, log_dir = log_dir, email_account = email_account)
 
 # define singularity cmd
-singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/freesurfer/license.txt /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/fmriprep_new/ participant --participant-label {sub_num} -w /work_dir/{project_dir}/temp_data/ --bold2t1w-dof 12 --ignore bref --output-spaces T1w fsnative fsaverage MNI152NLin2009cAsym:res-1 --cifti-output 170k --low-mem --mem-mb 32000 --nthreads {nb_procs:.0f}{anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
+singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/freesurfer/license.txt /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/fmriprep_new/ participant --participant-label {sub_num} -w /work_dir/{project_dir}/temp_data/ --bold2t1w-dof 12 --ignore sbref --output-spaces T1w fsnative fsaverage MNI152NLin2009cAsym:res-1 --cifti-output 170k --low-mem --nthreads {nb_procs:.0f}{anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
 									main_dir = main_dir,
 									project_dir = project_dir,
 									simg = singularity_dir,
