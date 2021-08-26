@@ -76,6 +76,15 @@ prf_dataset_file = "{}/{}_space-{}_prf.hdf".format(prf_dataset_folder, subject, 
 prf_dataset = cortex.load(prf_dataset_file)
 
 # sac-fix glm maps
+type_maps = ['SacFix','PurFix','PurEndo-Fix','PurExo-Fix','PurExo-PurEndo',\
+             'SacEndo-Fix','SacExo-Fix','SacExo-SacEndo']
+
+for type_map in type_maps:
+    exec("{type_map}_dataset_file) = '{base_dir}/pp_data/{subject}/glm/pycortex_outputs/flatmaps/{type_map}/{subject}_space-{regist_type}_{preproc}_glm_{type_map}.hdf'".format(
+         type_map=type_map, base_dir=base_dir,subject=subject))
+
+    
+
 sacfix_dataset_folder = '{}/pp_data/{}/glm/pycortex_outputs/flatmaps/{}'.format(base_dir, subject, 'Sac-Fix')
 sacfix_dataset_file = "{}/{}_space-{}_{}_glm_{}.hdf".format(sacfix_dataset_folder, subject, regist_type, preproc, 'Sac-Fix')
 sacfix_dataset = cortex.load(sacfix_dataset_file)
@@ -84,6 +93,15 @@ sacfix_dataset = cortex.load(sacfix_dataset_file)
 purfix_dataset_folder = '{}/pp_data/{}/glm/pycortex_outputs/flatmaps/{}'.format(base_dir, subject, 'Pur-Fix')
 purfix_dataset_file = "{}/{}_space-{}_{}_glm_{}.hdf".format(purfix_dataset_folder, subject, regist_type, preproc, 'Pur-Fix')
 purfix_dataset = cortex.load(purfix_dataset_file)
+
+# PurEndo-Fix glm maps
+# PurExo-Fix glm maps
+# PurExo-PurEndo glm maps
+
+# SacEndo-Fix glm maps
+# SacExo-Fix glm maps
+# SacExo-SacEndo glm maps
+
 
 # put together
 new_dataset = cortex.Dataset(prf = prf_dataset, sacfix = sacfix_dataset, purfix = purfix_dataset)
