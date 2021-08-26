@@ -24,6 +24,12 @@ Example:
 cd ~/projects/PredictEye/mri_analysis/
 python glm/fit_second_level_glm.py /scratch/mszinte/data/PredictEye SacLoc MNI152NLin2009cAsym fmriprep_dct Sac-Fix
 python glm/fit_second_level_glm.py /scratch/mszinte/data/PredictEye PurLoc MNI152NLin2009cAsym fmriprep_dct Pur-Fix
+python glm/fit_second_level_glm.py /scratch/mszinte/data/PredictEye SacVELoc MNI152NLin2009cAsym fmriprep_dct SacExo-Fix
+python glm/fit_second_level_glm.py /scratch/mszinte/data/PredictEye SacVELoc MNI152NLin2009cAsym fmriprep_dct SacEndo-Fix
+python glm/fit_second_level_glm.py /scratch/mszinte/data/PredictEye SacVELoc MNI152NLin2009cAsym fmriprep_dct SacExo-SacEndo
+python glm/fit_second_level_glm.py /scratch/mszinte/data/PredictEye PurVELoc MNI152NLin2009cAsym fmriprep_dct PurExo-Fix
+python glm/fit_second_level_glm.py /scratch/mszinte/data/PredictEye PurVELoc MNI152NLin2009cAsym fmriprep_dct PurEndo-Fix
+python glm/fit_second_level_glm.py /scratch/mszinte/data/PredictEye PurVELoc MNI152NLin2009cAsym fmriprep_dct PurExo-PurEndo
 -----------------------------------------------------------------------------------------
 """
 
@@ -63,7 +69,11 @@ space = sys.argv[3]
 preproc = sys.argv[4] 
 contrast = sys.argv[5] 
 
-subjects_label = ['sub-01', 'sub-02', 'sub-03', 'sub-04']
+subjects_label = ['sub-01_mni', 'sub-02_mni', 'sub-03_mni', 'sub-04_mni', 'sub-05_mni',
+                  'sub-06_mni', 'sub-07_mni', 'sub-08_mni', 'sub-09_mni', 'sub-11_mni',
+                  'sub-12_mni', 'sub-13_mni', 'sub-14_mni', 'sub-17_mni', 'sub-20_mni',
+                  'sub-21_mni', 'sub-22_mni', 'sub-23_mni', 'sub-24_mni', 'sub-25_mni',
+                 ]
 
 # Define folder
 # -------------
@@ -93,7 +103,7 @@ for subject in subjects_label:
     glm_folder = '{base_dir}/pp_data/{subject}/glm/fit/'.format(base_dir=base_dir, subject=subject)
     
     effects_map_path = '{glm_folder}{subject}_task-{task}_space-{space}_{preproc}_glm-{contrast}.nii.gz'.\
-            format(glm_folder=glm_folder, subject=subject,task=task,space=space,preproc=preproc,contrast=contrast)
+            format(glm_folder=glm_folder, subject=subject[:-4],task=task,space=space,preproc=preproc,contrast=contrast)
     effects_map_tmp = nb.load(effects_map_path)
     
     for map_name in maps_names:
@@ -131,8 +141,8 @@ for map_name in maps_names:
     deriv[...,(k*5)+0]  = outputs['effect_size'].dataobj #eff_map.dataobj
     deriv[...,(k*5)+1]  = outputs['z_score'].dataobj #z_map.dataobj
     deriv[...,(k*5)+2]  = outputs['p_value'].dataobj #z_p_map
-    deriv[...,(k*5)+3]  = p_parametric.dataobj
-    deriv[...,(k*5)+4]  = p_permutation.dataobj
+    deriv[...,(k*5)+3]  = p_parametric.dataobj # corrected p-map (parametric test)
+    deriv[...,(k*5)+4]  = p_permutation.dataobj # corrected p-map (non-param test)
     
     k+=1
     

@@ -48,7 +48,7 @@ from utils import set_pycortex_config_file
 
 # Get inputs
 # ----------
-subject = 'fsaverage'
+subject = 'sub-00'
 mni_subject = 'sub-00'
 
 # Define analysis parameters

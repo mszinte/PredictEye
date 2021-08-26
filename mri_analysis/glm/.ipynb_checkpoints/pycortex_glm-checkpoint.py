@@ -59,9 +59,12 @@ subject = sys.argv[2]
 regist_type = sys.argv[3]
 preproc = sys.argv[4]
 
-glm_dir = '{base_dir}/pp_data/{subject}/glm/fit/'.format(base_dir=base_dir, subject=subject)
+subject_folder = subject if regist_type=='T1w' else '{}_mni'.format(subject)
+
+glm_dir = '{base_dir}/pp_data/{subject}/glm/fit/'.format(base_dir=base_dir, subject=subject_folder)
 glm_files = os.listdir(glm_dir)
 glm_files =[x for x in glm_files if regist_type in x]
+
 
 # Define analysis parameters
 # --------------------------
@@ -92,7 +95,7 @@ for glm_file in glm_files:
     
     contrast = glm_file.split("_")[-1][4:-7]    
     
-    flatmaps_dir = '{}/pp_data/{}/glm/pycortex_outputs/flatmaps/{}'.format(base_dir, subject, contrast)
+    flatmaps_dir = '{}/pp_data/{}/glm/pycortex_outputs/flatmaps/{}'.format(base_dir, subject_folder, contrast)
     try: os.makedirs(flatmaps_dir)
     except: pass
     
@@ -107,7 +110,7 @@ for glm_file in glm_files:
         alpha = pval_range
 
         data  = glm_mat[...,maps_names[map_name]]
-        param[map_name] = {'subject':subject, 'data': data, 'xfmname': xfm_name, 'cmap': cmap, 'alpha': alpha,\
+        param[map_name] = {'subject':subject_folder, 'data': data, 'xfmname': xfm_name, 'cmap': cmap, 'alpha': alpha,\
                            'vmin': glm_vmin[0],'vmax': glm_vmax[0], 'cbar': 'discrete', \
                            'description': '{}: {}'.format(contrast,map_name), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
 

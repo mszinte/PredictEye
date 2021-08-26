@@ -1,14 +1,13 @@
 """
 -----------------------------------------------------------------------------------------
-pycortex_glm.py
+pycortex_second_level_glm.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
 Generate flatmaps for glm analysis
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: base_dir (e.g. )
-sys.argv[2]: task
-sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
+sys.argv[2]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
 -----------------------------------------------------------------------------------------
 Output(s):
 GLM output on a flatmap
@@ -16,11 +15,11 @@ GLM output on a flatmap
 To run:
 On invibe server
 >> cd to function
->> python glm/pycortex_glm.py [base_dir] [subject] [task] [preproc]
+>> python glm/pycortex_glm.py [base_dir] [preproc]
 -----------------------------------------------------------------------------------------
 Example:
 cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
-python glm/pycortex_second_level_glm.py ~/disks/meso_S/data/PredictEye fmriprep_dct
+python glm/pycortex_second_level_glm.py ~/disks/scratch_MS/data/PredictEye fmriprep_dct
 -----------------------------------------------------------------------------------------
 """
 
@@ -54,8 +53,7 @@ spec.loader.exec_module(utils)
 # Get inputs
 # ----------
 base_dir =  sys.argv[1]
-task = sys.argv[2]
-preproc = sys.argv[3]
+preproc = sys.argv[2]
 
 subject = 'sub-00'
 regist_type = 'MNI152NLin2009cAsym'
@@ -82,6 +80,7 @@ cmap_steps = 255
 glm_vmin = analysis_info["glm_vmin"]
 glm_vmax = analysis_info["glm_vmax"]
 maps_names = {'z_map':1, 'fdr_map':6, 'fdr_c10_map':11, 'fdr_c50_map':16, 'fdr_c100_map':21}
+tests_names = {'param_test':2, 'nonparam_test':3}
 
 volumes = {}
 for glm_file in glm_files:
@@ -101,26 +100,32 @@ for glm_file in glm_files:
     param = dict()
     for map_name in maps_names:
         
-        # compute alpha
-        pval = glm_mat[...,maps_names[map_name]+3] # getting permutation test p-values
-        pval_range = (pval - glm_vmin[1])/ (glm_vmax[1] - glm_vmin[1])
-        pval_range[pval_range<0] = 0
-        alpha = pval_range
+        for test_name in tests_names:
+            
+            # compute alpha
+            pval = glm_mat[...,maps_names[map_name]+tests_names[test_name]] # getting p-values
+            print(pval.shape)
+            fsd
+#             print(min(min(min(pval))), max(max(max(pval))))
+            
+            pval_range = (pval - glm_vmin[1])/ (glm_vmax[1] - glm_vmin[1])
+            pval_range[pval_range<0] = 0
+            alpha = pval_range
 
-        data  = glm_mat[...,maps_names[map_name]]
-        param[map_name] = {'subject':subject, 'data': data, 'xfmname': xfm_name, 'cmap': cmap, 'alpha': alpha,\
-                           'vmin': glm_vmin[0],'vmax': glm_vmax[0], 'cbar': 'discrete', \
-                           'description': '{}: {}'.format(contrast,map_name), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
+            data  = glm_mat[...,maps_names[map_name]]
+            param[map_name] = {'subject':subject, 'data': data, 'xfmname': xfm_name, 'cmap': cmap, 'alpha': alpha,\
+                               'vmin': glm_vmin[0],'vmax': glm_vmax[0], 'cbar': 'discrete', \
+                               'description': '{}: {}, {}'.format(contrast,map_name,test_name), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
 
-        # create flatmap
-        exec('volume_{map_name} = utils.draw_cortex_vertex(**param[\'{map_name}\'])'.format(map_name=map_name))
-        exec("plt.savefig('{}/{}_space-{}_{}_glm_{}_{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, contrast, map_name))
-        plt.close()
-        
-        # save flatmap as dataset
-        exec('vol_description = param[\'{map_name}\']["description"]'.format(map_name=map_name))
-        exec('volume = volume_{map_name}'.format(map_name = map_name))
-        volumes.update({vol_description:volume})
+            # create flatmap
+            exec('volume_{map_name} = utils.draw_cortex_vertex(**param[\'{map_name}\'])'.format(map_name=map_name))
+            exec("plt.savefig('{}/{}_space-{}_{}_glm_{}_{}_{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, contrast, map_name, test_name))
+            plt.close()
+
+            # save flatmap as dataset
+            exec('vol_description = param[\'{map_name}\']["description"]'.format(map_name=map_name))
+            exec('volume = volume_{map_name}'.format(map_name = map_name))
+            volumes.update({vol_description:volume})
     
     # save dataset
     dataset_file = "{}/{}_space-{}_{}_glm_{}.hdf".format(flatmaps_dir, subject, regist_type, preproc, contrast)

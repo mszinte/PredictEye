@@ -62,6 +62,22 @@ def eventsMatrix(design_file, task):
             vis_end = group[1]['eyemov_vis_end'][group[1].index[0]]
 
             new_events_glm = new_events_glm.append(pd.Series([onset,dur,vis_end],index =['onset', 'duration', 'trial_type']), ignore_index=True)
+            
+    elif 'pMF' in task:
+        events_glm = events[['onset','duration','trial_type']].copy(deep=True)
+        events_glm.replace({'trial_type': {3: 'Fix', 1: 'OM', 2: 'OM'}},inplace=True)
+        events_glm.at[:,'duration'] = tr_dur
+        events_glm.at[:,'onset'] = 0
+        events_glm_groups = events_glm.groupby((events_glm.trial_type!=events_glm.trial_type.shift()).cumsum())
+        
+        new_events_glm = pd.DataFrame([], columns=['onset', 'duration', 'trial_type'])
+        for idx, group in enumerate(events_glm_groups):
+            onset = group[1]['onset'][group[1].index[0]]
+            dur = sum(group[1]['duration'])
+            ttype = group[1]['trial_type'][group[1].index[0]]
+
+            new_events_glm = new_events_glm.append(pd.Series([onset,dur,ttype],index =['onset', 'duration', 'trial_type']), ignore_index=True)
+
 
     for idx in new_events_glm.index:
         if idx==0:

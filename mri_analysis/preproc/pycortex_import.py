@@ -54,6 +54,7 @@ subject = sys.argv[1]
 reg_type = sys.argv[2]
 
 cx_subject = subject if reg_type=='T1w' else '{}_mni'.format(subject)
+fs_subject = subject if reg_type=='T1w' else 'sub-00'
 
 # Define analysis parameters
 # --------------------------
@@ -77,12 +78,12 @@ set_pycortex_config_file(base_dir)
 # Add participant to pycortex db
 # ------------------------------
 print('import subject in pycortex')
-cortex.freesurfer.import_subj(fs_subject = subject, cx_subject = cx_subject, freesurfer_subject_dir = fs_dir, whitematter_surf = 'smoothwm')
+cortex.freesurfer.import_subj(fs_subject = fs_subject, cx_subject = cx_subject, freesurfer_subject_dir = fs_dir, whitematter_surf = 'smoothwm')
 
 # Add participant flat maps
 # -------------------------
 print('import subject flatmaps')
-try: cortex.freesurfer.import_flat(fs_subject = subject, cx_subject = cx_subject, freesurfer_subject_dir = fs_dir, patch = 'full', auto_overwrite=True)
+try: cortex.freesurfer.import_flat(fs_subject = fs_subject, cx_subject = cx_subject, freesurfer_subject_dir = fs_dir, patch = 'full', auto_overwrite=True)
 except: pass
 
 # Add transform to pycortex db
@@ -92,7 +93,7 @@ file_list = [x for x in file_list if reg_type in x]
 ref_file = file_list[0]
  
 transform = cortex.xfm.Transform(np.identity(4), ref_file)
-transform.save(subject, xfm_name, 'magnet')
+transform.save(cx_subject, xfm_name, 'magnet')
 
 # Add masks to pycortex transform
 # -------------------------------

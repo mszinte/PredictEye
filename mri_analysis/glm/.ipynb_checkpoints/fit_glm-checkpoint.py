@@ -27,6 +27,9 @@ cd ~/projects/PredictEye/mri_analysis/
 python glm/fit_glm.py /scratch/mszinte/data/PredictEye sub-01 ses-01 SacLoc T1w run-1 fmriprep_dct
 python glm/fit_glm.py /scratch/mszinte/data/PredictEye sub-01 ses-01 PurLoc T1w run-1 fmriprep_dct
 python glm/fit_glm.py /scratch/mszinte/data/PredictEye sub-02 ses-02 SacVELoc T1w run-1 fmriprep_dct
+python glm/fit_glm.py /scratch/mszinte/data/PredictEye sub-02 ses-02 SacLoc MNI152NLin2009cAsym run-1 fmriprep_dct
+python glm/fit_glm.py /scratch/mszinte/data/PredictEye sub-01 ses-01 pMF T1w run-1 fmriprep_dct
+
 -----------------------------------------------------------------------------------------
 """
 
@@ -72,6 +75,8 @@ space = sys.argv[5]
 run = sys.argv[6] 
 preproc = sys.argv[7] 
 
+subject_folder = subject if space=='T1w' else '{}_mni'.format(subject) # output folder
+
 # Define analysis parameters
 # --------------------------
 with open('settings.json') as f:
@@ -80,7 +85,7 @@ with open('settings.json') as f:
     
 # Define folder
 # -------------
-deriv_dir = "{}/pp_data/{}/glm/fit".format(base_dir,subject)
+deriv_dir = "{}/pp_data/{}/glm/fit".format(base_dir,subject_folder)
 
 print('GLM analysis on {}...'.format(task))
 task_name = [task[:3], 'Fix' ]
@@ -88,7 +93,7 @@ file_img = "{base_dir}/pp_data/{subject}/func/{subject}_task-{task}_space-{space
                 format(base_dir=base_dir, subject=subject,task=task,space=space,preproc=preproc)
 file_mask_img = '{base_dir}/deriv_data/fmriprep/fmriprep/{subject}/{session}/func/{subject}_{session}_task-{task}_run-1_space-{space}_desc-brain_mask.nii.gz'.\
                 format(base_dir=base_dir, subject=subject, session=session, task=task, space=space)
-glm_folder = '{base_dir}/pp_data/{subject}/glm/fit/'.format(base_dir=base_dir, subject=subject)
+glm_folder = '{base_dir}/pp_data/{subject}/glm/fit/'.format(base_dir=base_dir, subject=subject_folder)
 
 glm_alpha = analysis_info['glm_alpha']
 
@@ -135,6 +140,10 @@ elif task == 'PurVELoc':
     contrasts = {   'PurExo-PurEndo': conditions['PurExo'] - conditions['PurEndo'],
                     'PurExo-Fix':     conditions['PurExo'] - conditions['Fix'],
                     'PurEndo-Fix':    conditions['PurEndo'] - conditions['Fix']}
+elif task == 'pMF':
+    conditions = {  'Fix':     np.array([1., 0., 0., 0.]),
+                    'OM':      np.array([0., 1., 0., 0.])}
+    contrasts = {   'OM-Fix':  conditions['Fix'] - conditions['OM'] }
 
 # compute glm maps
 for contrast in contrasts:
