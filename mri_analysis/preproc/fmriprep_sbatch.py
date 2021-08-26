@@ -61,7 +61,7 @@ proj_name = 'b161'
 singularity_dir = '/scratch/mszinte/softwares/fmriprep-20.2.3.simg'
 nb_procs = 32
 memory_val = 48
-log_dir = opj(main_dir,project_dir,'deriv_data','fmriprep','log_outputs')
+log_dir = opj(main_dir,project_dir,'deriv_data','fmriprep_new','log_outputs')
 
 # special input
 anat_only, use_aroma, use_fmapfree, anat_only_end, use_skip_bids_val = '','','','',''
@@ -94,7 +94,7 @@ slurm_cmd = """\
 											anat_only_end = anat_only_end, memory_val = memory_val, log_dir = log_dir, email_account = email_account)
 
 # define singularity cmd
-singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/freesurfer/license.txt /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/fmriprep/ participant --participant-label {sub_num} -w /work_dir/{project_dir}/temp_data/ --bold2t1w-dof 12 --output-spaces T1w MNI152NLin2009cAsym --cifti-output --low-mem --mem-mb 32000 --nthreads {nb_procs:.0f}{anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
+singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --fs-license-file /work_dir/freesurfer/license.txt /work_dir/{project_dir}/bids_data/ /work_dir/{project_dir}/deriv_data/fmriprep_new/ participant --participant-label {sub_num} -w /work_dir/{project_dir}/temp_data/ --bold2t1w-dof 12 --ignore bref --output-spaces T1w fsnative fsaverage MNI152NLin2009cAsym:res-1 --cifti-output 170k --low-mem --mem-mb 32000 --nthreads {nb_procs:.0f}{anat_only}{use_aroma}{use_fmapfree}{use_skip_bids_val}".format(
 									main_dir = main_dir,
 									project_dir = project_dir,
 									simg = singularity_dir,
@@ -106,11 +106,11 @@ singularity_cmd = "singularity run --cleanenv -B {main_dir}:/work_dir {simg} --f
 									use_skip_bids_val = use_skip_bids_val)
 
 # create sh folder and file
-sh_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/jobs/sub-{sub_num}_fmriprep{anat_only_end}.sh".format(main_dir = main_dir, sub_num = sub_num,project_dir = project_dir,anat_only_end = anat_only_end)
+sh_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep_new/jobs/sub-{sub_num}_fmriprep{anat_only_end}.sh".format(main_dir = main_dir, sub_num = sub_num,project_dir = project_dir,anat_only_end = anat_only_end)
 
 try:
-	os.makedirs(opj(main_dir,project_dir,'deriv_data','fmriprep','jobs'))
-	os.makedirs(opj(main_dir,project_dir,'deriv_data','fmriprep','log_outputs'))
+	os.makedirs(opj(main_dir,project_dir,'deriv_data','fmriprep_new','jobs'))
+	os.makedirs(opj(main_dir,project_dir,'deriv_data','fmriprep_new','log_outputs'))
 except:
 	pass
 of = open(sh_dir, 'w')
