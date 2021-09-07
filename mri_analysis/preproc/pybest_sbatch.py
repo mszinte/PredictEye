@@ -25,7 +25,8 @@ python preproc/pybest_sbatch.py [main directory] [project name] [subject num]
 -----------------------------------------------------------------------------------------
 Exemple:
 python preproc/pybest_sbatch.py /scratch/mszinte/data PredictEye sub-01 T1w 20 martin.szinte
-python preproc/pybest_sbatch.py /scratch/mszinte/data PredictEye sub-01 MNI152NLin2009cAsym 20 martin.szinte
+python preproc/pybest_sbatch.py /scratch/mszinte/data PredictEye sub-01 MNI152NLin2009cAsym-res-1 20 martin.szinte
+python preproc/pybest_sbatch.py /scratch/mszinte/data PredictEye sub-01 fsLR_den-170k 20 martin.szinte
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -54,7 +55,12 @@ cluster_name  = 'skylake'
 proj_name = 'b161'
 nb_procs = 32
 memory_val = 48
-log_dir = opj(main_dir,project_dir,'deriv_data','pybest','log_outputs')
+log_dir = opj(main_dir,project_dir,'deriv_data','pybest_new','log_outputs')
+if regist_type == 'fsLR_den-170k':
+    cifti_file = opj(main_dir,project_dir,'deriv_data','pybest_new','indices','cifti_indices.hdf5')
+    cifti_cmd = "'{cifti_file}' 'Left_indices' 'Right_indices' 'Subcortex_indices' --iscifti 'y' --mode 'all'".format(cifti_file=cifti_file)
+else:
+    cifti_cmd = ''
 
 # define SLURM cmd
 slurm_cmd = """\
@@ -70,31 +76,35 @@ slurm_cmd = """\
 #SBATCH -e {log_dir}/{subject}_pybest_%N_%j_%a.err
 #SBATCH -o {log_dir}/{subject}_pybest_%N_%j_%a.out
 #SBATCH -J {subject}_pybest
-#SBATCH --mail-type=BEGIN,END\n\n""".format(proj_name = proj_name, nb_procs = nb_procs, hour_proc = hour_proc, 
-											subject = subject, memory_val = memory_val, log_dir = log_dir, email_account=email_account)
+#SBATCH --mail-type=BEGIN,END\n\n""".format(proj_name=proj_name, nb_procs=nb_procs, hour_proc=hour_proc, 
+                                            subject=subject, memory_val=memory_val, log_dir=log_dir, email_account=email_account)
+
+
 
 # define pybest cmd
-fmriprep_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep/fmriprep/".format(main_dir = main_dir,project_dir = project_dir)
-bids_dir = "{main_dir}/{project_dir}/bids_data/".format(main_dir = main_dir, project_dir = project_dir)
-pybest_dir = "{main_dir}/{project_dir}/deriv_data/pybest/".format(main_dir = main_dir,project_dir = project_dir)
+fmriprep_dir = "{main_dir}/{project_dir}/deriv_data/fmriprep_new/fmriprep/".format(main_dir=main_dir,project_dir=project_dir)
+bids_dir = "{main_dir}/{project_dir}/bids_data/".format(main_dir=main_dir, project_dir=project_dir)
+pybest_dir = "{main_dir}/{project_dir}/deriv_data/pybest_new/".format(main_dir=main_dir,project_dir=project_dir)
 
-pybest_cmd = "pybest {fmriprep_dir} {bids_dir} --out-dir {pybest_dir} --subject '{sub_num}' --space '{regist_type}' --noise-source fmriprep --skip-signalproc --verbose 'DEBUG' --save-all".format(
-						fmriprep_dir = fmriprep_dir,bids_dir = bids_dir, pybest_dir = pybest_dir, sub_num = sub_num, regist_type = regist_type)
+pybest_cmd = "pybest {fmriprep_dir} {bids_dir} {cifti_cmd} --out-dir {pybest_dir} --subject '{sub_num}' --space '{regist_type}' --high-pass-type 'dct' --noise-source fmriprep --skip-signalproc --verbose 'DEBUG' --save-all".format(
+                        fmriprep_dir=fmriprep_dir,bids_dir=bids_dir, cifti_cmd=cifti_cmd, pybest_dir=pybest_dir, sub_num=sub_num, regist_type=regist_type)
 
 # create sh folder and file
-sh_dir = "{main_dir}/{project_dir}/deriv_data/pybest/jobs/{subject}_pybest.sh".format(main_dir = main_dir, subject = subject,project_dir = project_dir,)
+sh_dir = "{main_dir}/{project_dir}/deriv_data/pybest_new/jobs/{subject}_pybest.sh".format(main_dir=main_dir, subject=subject,project_dir=project_dir,)
+
+#pybest /scratch/mszinte/data/PredictEye/deriv_data/fmriprep_new/fmriprep/ /scratch/mszinte/data/PredictEye/bids_data/ /scratch/mszinte/data/PredictEye/deriv_data/pybest_new/indices/cifti_indices.hdf5 'Left_indices' 'Right_indices' 'Subcortex_indices' --out-dir /scratch/mszinte/data/PredictEye/deriv_data/pybest_new/ --subject '01' --space 'fsLR_den-170k' --high-pass-type 'dct'  --iscifti 'y' --mode 'all' --noise-source fmriprep --skip-signalproc  --verbose 'DEBUG' --save-all
 
 try:
-	os.makedirs(opj(main_dir,project_dir,'deriv_data','pybest','jobs'))
-	os.makedirs(opj(main_dir,project_dir,'deriv_data','pybest','log_outputs'))
+    os.makedirs(opj(main_dir,project_dir,'deriv_data','pybest_new','jobs'))
+    os.makedirs(opj(main_dir,project_dir,'deriv_data','pybest_new','log_outputs'))
 except:
-	pass
+    pass
 
 of = open(sh_dir, 'w')
-of.write("{slurm_cmd}{pybest_cmd}".format(slurm_cmd = slurm_cmd,pybest_cmd = pybest_cmd))
+of.write("{slurm_cmd}{pybest_cmd}".format(slurm_cmd=slurm_cmd,pybest_cmd=pybest_cmd))
 of.close()
 
 # Submit jobs
-print("Submitting {sh_dir} to queue".format(sh_dir = sh_dir))
+print("Submitting {sh_dir} to queue".format(sh_dir=sh_dir))
 os.chdir(log_dir)
-os.system("sbatch {sh_dir}".format(sh_dir = sh_dir))
+# os.system("sbatch {sh_dir}".format(sh_dir=sh_dir))
