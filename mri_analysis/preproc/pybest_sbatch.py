@@ -90,9 +90,8 @@ pybest_cmd = "pybest {fmriprep_dir} {bids_dir} {cifti_cmd} --out-dir {pybest_dir
                         fmriprep_dir=fmriprep_dir,bids_dir=bids_dir, cifti_cmd=cifti_cmd, pybest_dir=pybest_dir, sub_num=sub_num, regist_type=regist_type)
 
 # create sh folder and file
-sh_dir = "{main_dir}/{project_dir}/deriv_data/pybest_new/jobs/{subject}_pybest.sh".format(main_dir=main_dir, subject=subject,project_dir=project_dir,)
+sh_dir = "{main_dir}/{project_dir}/deriv_data/pybest_new/jobs/{subject}_pybest_{regist_type}.sh".format(main_dir=main_dir, subject=subject,project_dir=project_dir,regist_type=regist_type)
 
-#pybest /scratch/mszinte/data/PredictEye/deriv_data/fmriprep_new/fmriprep/ /scratch/mszinte/data/PredictEye/bids_data/ /scratch/mszinte/data/PredictEye/deriv_data/pybest_new/indices/cifti_indices.hdf5 'Left_indices' 'Right_indices' 'Subcortex_indices' --out-dir /scratch/mszinte/data/PredictEye/deriv_data/pybest_new/ --subject '01' --space 'fsLR_den-170k' --high-pass-type 'dct'  --iscifti 'y' --mode 'all' --noise-source fmriprep --skip-signalproc  --verbose 'DEBUG' --save-all
 
 try:
     os.makedirs(opj(main_dir,project_dir,'deriv_data','pybest_new','jobs'))
@@ -107,4 +106,4 @@ of.close()
 # Submit jobs
 print("Submitting {sh_dir} to queue".format(sh_dir=sh_dir))
 os.chdir(log_dir)
-# os.system("sbatch {sh_dir}".format(sh_dir=sh_dir))
+os.system("sbatch {sh_dir}".format(sh_dir=sh_dir))
