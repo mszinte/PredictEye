@@ -49,14 +49,11 @@ regist_type = sys.argv[2]
 if regist_type == 'fsLR_den-170k':
     file_ends = ['.npy','_subc.npy']
 else: 
-    file_ends = '.nii.gz'
-
+    file_ends = ['.nii.gz']
 
 # MRI analysis imports
 # --------------------
 import nibabel as nb
-
-from scipy.signal import savgol_filter
 
 with open('settings.json') as f:
     json_s = f.read()
@@ -79,29 +76,28 @@ except: pass
 
 orig_folder = "{base_dir}/deriv_data/pybest_new/{sub}".format(base_dir=base_dir, sub=sub_name)
 
-# for task_num, task_name in enumerate(analysis_info['task_names']):
-#     for task_run in np.arange(0,analysis_info['task_runs'][task_num],1):
-#         for ses_num,ses_name in enumerate(next(os.walk(orig_folder))[1]):
-#             for file_end in file_ends:
-#                 # dct func
+for task_num, task_name in enumerate(analysis_info['task_names']):
+    for task_run in np.arange(0,analysis_info['task_runs'][task_num],1):
+        for ses_num,ses_name in enumerate(next(os.walk(orig_folder))[1]):
+            for file_end in file_ends:
+                # dct func
 
-#                 orig_file1 = "{orig_fold}/{ses}/preproc/{sub}_{ses}_task-{task_name}_run-{task_run}_space-{reg}_desc-preproc_bold{file_end}".format(
-#                                         orig_fold=orig_folder, sub=sub_name, ses=ses_name, task_name=task_name, reg=regist_type, task_run=task_run+1, file_end=file_end)
-#                 dest_file1 = "{dest_fold}/{sub}_task-{task_name}_run-{task_run}_space-{reg}_fmriprep_dct{file_end}".format(
-#                                         dest_fold=dest_folder1, sub=sub_name, task_name=task_name, reg=regist_type, task_run=task_run+1, file_end=file_end)
+                orig_file1 = "{orig_fold}/{ses}/preproc/{sub}_{ses}_task-{task_name}_run-{task_run}_space-{reg}_desc-preproc_bold{file_end}".format(
+                                        orig_fold=orig_folder, sub=sub_name, ses=ses_name, task_name=task_name, reg=regist_type, task_run=task_run+1, file_end=file_end)
+                dest_file1 = "{dest_fold}/{sub}_task-{task_name}_run-{task_run}_space-{reg}_fmriprep_dct{file_end}".format(
+                                        dest_fold=dest_folder1, sub=sub_name, task_name=task_name, reg=regist_type, task_run=task_run+1, file_end=file_end)
 
+                if os.path.isfile(orig_file1):
+                    os.system("{cmd} {orig} {dest}".format(cmd=trans_cmd, orig=orig_file1, dest=dest_file1))
 
-#                 if os.path.isfile(orig_file1):
-#                     os.system("{cmd} {orig} {dest}".format(cmd=trans_cmd, orig=orig_file1, dest=dest_file1))
+                # dct + denoised func
+                orig_file2 = "{orig_fold}/{ses}/denoising/{sub}_{ses}_task-{task_name}_run-{task_run}_space-{reg}_desc-denoised_bold{file_end}".format(
+                                        orig_fold=orig_folder, sub=sub_name, ses=ses_name, task_name=task_name, reg=regist_type, task_run=task_run+1, file_end=file_end)
+                dest_file2 = "{dest_fold}/{sub}_task-{task_name}_run-{task_run}_space-{reg}_fmriprep_dct_pca{file_end}".format(
+                                        dest_fold=dest_folder2, sub=sub_name, task_name=task_name, reg=regist_type, task_run=task_run+1, file_end=file_end)
 
-#                 # dct + denoised func
-#                 orig_file2 = "{orig_fold}/{ses}/denoising/{sub}_{ses}_task-{task_name}_run-{task_run}_space-{reg}_desc-denoised_bold{file_end}".format(
-#                                         orig_fold=orig_folder, sub=sub_name, ses=ses_name, task_name=task_name, reg=regist_type, task_run=task_run+1, file_end=file_end)
-#                 dest_file2 = "{dest_fold}/{sub}_task-{task_name}_run-{task_run}_space-{reg}_fmriprep_dct_pca{file_end}".format(
-#                                         dest_fold=dest_folder2, sub=sub_name, task_name=task_name, reg=regist_type, task_run=task_run+1, file_end=file_end)
-
-#                 if os.path.isfile(orig_file2):
-#                     os.system("{cmd} {orig} {dest}".format(cmd=trans_cmd, orig=orig_file2, dest=dest_file2))
+                if os.path.isfile(orig_file2):
+                    os.system("{cmd} {orig} {dest}".format(cmd=trans_cmd, orig=orig_file2, dest=dest_file2))
 
 # Average tasks runs
 for preproc in analysis_info['preproc']:
