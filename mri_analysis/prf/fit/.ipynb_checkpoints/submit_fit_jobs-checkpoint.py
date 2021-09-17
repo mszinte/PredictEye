@@ -21,8 +21,11 @@ To run:
 Exemple:
 cd /home/mszinte/projects/PredictEye/mri_analysis/
 python prf/fit/submit_fit_jobs.py sub-01 T1w fmriprep_dct
-python prf/fit/submit_fit_jobs.py sub-01 fsLR_den-170k fmriprep_dct surface
+python prf/fit/submit_fit_jobs.py sub-01 fsLR_den-170k fmriprep_dct surf
 python prf/fit/submit_fit_jobs.py sub-01 fsLR_den-170k fmriprep_dct subc
+python prf/fit/submit_fit_jobs.py sub-01 T1w fmriprep_dct_pca
+python prf/fit/submit_fit_jobs.py sub-01 fsLR_den-170k fmriprep_dct_pca surf
+python prf/fit/submit_fit_jobs.py sub-01 fsLR_den-170k fmriprep_dct_pca subc
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -57,7 +60,6 @@ if regist_type == 'fsLR_den-170k':
 else:
     file_ext = '.nii.gz'
     sh_end = ''
-    
 
 # Analysis parameters
 with open('settings.json') as f:
@@ -67,19 +69,13 @@ with open('settings.json') as f:
 # Cluster settings
 base_dir = analysis_info['base_dir']
 sub_command = 'sbatch '
-fit_per_hour = 8000.0
+fit_per_hour = 15000.0
 nb_procs = 8
 proj_name = 'b161'
 
 print("pRF analysis: running on Skylake")
 
 # Create job and log output folders
-try:
-    os.makedirs('{}/pp_data_new/{}/gauss/jobs/{}'.format(base_dir,subject,reg))
-    os.makedirs('{}/pp_data_new/{}/gauss/log_outputs/{}'.format(base_dir,subject,reg))
-except:
-    pass
-
 data_types = ['run-1','run-2','run-3','run-4','run-5','avg']
 for data_type in data_types:
     

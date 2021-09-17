@@ -139,3 +139,20 @@ for preproc in analysis_info['preproc']:
 
                     new_img = nb.Nifti1Image(dataobj=data_avg, affine=img.affine, header=img.header)
                     new_img.to_filename(new_file)
+                    
+# Anatomy
+output_files = ['dseg','desc-preproc_T1w','desc-aparcaseg_dseg','desc-aseg_dseg','desc-brain_mask']
+orig_folder = "{base_dir}/deriv_data/fmriprep_new/fmriprep/{sub}".format(base_dir=base_dir, sub=sub_name)
+
+dest_folder_anat = "{base_dir}/pp_data_new/{sub}/anat".format(base_dir=base_dir, sub=sub_name)
+try: os.makedirs(dest_folder_anat)
+except: pass
+
+if regist_type == 'T1w':
+    for output_file in output_files:
+        
+        orig_file = "{orig_fold}/ses-01/anat/{sub}_ses-01_{output_file}.nii.gz".format(orig_fold=orig_folder, sub=sub_name, output_file=output_file)
+        dest_file = "{dest_fold}/{sub}_{output_file}.nii.gz".format(dest_fold=dest_folder_anat, sub=sub_name, output_file=output_file)
+
+        if os.path.isfile(orig_file):
+            os.system("{cmd} {orig} {dest}".format(cmd=trans_cmd, orig=orig_file, dest=dest_file))
