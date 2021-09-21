@@ -64,7 +64,6 @@ def eventsMatrix(design_file, task, tr):
             new_events_glm = pd.DataFrame([], columns=['onset', 'duration', 'trial_type'])
             
             for idx, group in enumerate(events_glm_groups):
-                deb()
                 onset = np.round(group[1]['onset'][group[1].index[0]],2)
                 dur = np.round(sum(group[1]['duration']),2)
                 vis_end = group[1]['eyemov_vis_end'][group[1].index[0]]
@@ -333,3 +332,125 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
                                 curvature_contrast = curv_contrast)
 
     return volume
+
+
+def prf_fit2deriv(input_mat, stim_width, stim_height):
+    """
+    Convert pRF fitting value to pRF derivatives
+   
+    Parameters
+    ----------
+    input_mat: input matrix
+    stim_width: stimulus width in deg [for pRF only]
+    stim_heigth: stimulus height in deg [for pRF only]
+
+    Returns
+    -------
+    deriv: derivative of pRF analysis
+
+    stucture output:
+    columns: 1->size of input
+    row00 : R2
+    row01 : eccentricity in deg
+    row02 : polar angle real component in deg
+    row03 : polar angle imaginary component in deg
+    row04 : size in deg
+    row05 : amplitude
+    row06 : baseline
+    row07 : coverage or nan
+    row08 : x
+    row09 : y
+    ['rsq','ecc','polar_real','polar_imag','size','amp','baseline','x','y','cov']
+    """
+
+    # Imports
+    # -------
+    # General imports
+    import os
+    import nibabel as nb
+    import glob
+    import numpy as np
+    import ipdb
+    deb = ipdb.set_trace
+    
+    # Popeye imports
+    from popeye.spinach import generate_og_receptive_fields
+
+    # Get data details
+    # ----------------
+    fit = []
+    fit = input_mat
+
+    # Compute derived measures from prfs/pmfs
+    # ---------------------------------------
+    # get data index
+    x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, rsq_idx = 0, 1, 2, 3, 4, 5
+
+    # change to nan empty voxels
+    fit[fit[:,:,:,rsq_idx] == 0] = np.nan
+    
+    # r-square
+    rsq = fit[:,:,:,rsq_idx]
+
+    # eccentricity
+    ecc = np.nan_to_num(np.sqrt(fit[:,:,:,x_idx]**2 + fit[:,:,:,y_idx]**2))
+
+    # polar angle
+    complex_polar = fit[:,:,:,x_idx] + 1j * fit[:,:,:,y_idx]
+    normed_polar = complex_polar / np.abs(complex_polar)
+    polar_real = np.real(normed_polar)
+    polar_imag = np.imag(normed_polar)
+    
+    # size
+    size_ = fit[:,:,:,sigma_idx].astype(np.float64)
+    size_[size_<1e-4] = 1e-4
+
+    # amplitude
+    amp = fit[:,:,:,beta_idx]
+    
+    # baseline
+    baseline = fit[:,:,:,baseline_idx]
+
+    # coverage
+    deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 50), np.linspace(-30, 30, 50))         # define prfs in visual space
+    flat_fit = fit.reshape((-1, fit.shape[-1])).astype(np.float64)
+    rfs = generate_og_receptive_fields( flat_fit[:,x_idx],
+                                        flat_fit[:,y_idx],
+                                        flat_fit[:,sigma_idx],
+                                        flat_fit[:,beta_idx].T*0+1,
+                                        deg_x,
+                                        deg_y)
+
+    total_prf_content = rfs.reshape((-1, flat_fit.shape[0])).sum(axis=0)
+    log_x = np.logical_and(deg_x >= -stim_width/2.0, deg_x <= stim_width/2.0)
+    log_y = np.logical_and(deg_y >= -stim_height/2.0, deg_y <= stim_height/2.0)
+    stim_vignet = np.logical_and(log_x,log_y)
+    cov = rfs[stim_vignet, :].sum(axis=0) / total_prf_content
+    cov = cov.reshape(baseline.shape)
+
+    # x
+    x = fit[:,:,:,x_idx]
+
+    # y
+    y = fit[:,:,:,y_idx]
+
+    # Save results
+    if np.ndim(fit) == 4:
+        deriv = np.zeros((fit.shape[0],fit.shape[1],fit.shape[2],10))*np.nan
+    elif np.ndim(fit) == 2:
+        deriv = np.zeros((fit.shape[0],10))*np.nan
+        
+    deriv[...,0]  = rsq
+    deriv[...,1]  = ecc
+    deriv[...,2]  = polar_real
+    deriv[...,3]  = polar_imag
+    deriv[...,4]  = size_
+    deriv[...,5]  = amp
+    deriv[...,6]  = baseline
+    deriv[...,7]  = cov
+    deriv[...,8]  = x
+    deriv[...,9]  = y
+        
+    deriv = deriv.astype(np.float32)
+
+    return deriv

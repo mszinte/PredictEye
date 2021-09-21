@@ -3,7 +3,7 @@
 preproc_end.py
 -----------------------------------------------------------------------------------------
 Goal of the script:
-Arrange and average runs
+Arrange and average runs including leave-one-out averaging procedure
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: subject name
@@ -54,6 +54,7 @@ else:
 # MRI analysis imports
 # --------------------
 import nibabel as nb
+import itertools as it
 
 with open('settings.json') as f:
     json_s = f.read()
@@ -73,6 +74,15 @@ except: pass
 dest_folder2 = "{base_dir}/pp_data_new/{sub}/func/fmriprep_dct_pca".format(base_dir=base_dir, sub=sub_name)
 try: os.makedirs(dest_folder2)
 except: pass
+
+dest_folder3 = "{base_dir}/pp_data_new/{sub}/loo/fmriprep_dct".format(base_dir=base_dir, sub=sub_name)
+try: os.makedirs(dest_folder3)
+except: pass
+
+dest_folder4 = "{base_dir}/pp_data_new/{sub}/loo/fmriprep_dct_pca".format(base_dir=base_dir, sub=sub_name)
+try: os.makedirs(dest_folder4)
+except: pass
+
 
 orig_folder = "{base_dir}/deriv_data/pybest_new/{sub}".format(base_dir=base_dir, sub=sub_name)
 
@@ -139,7 +149,65 @@ for preproc in analysis_info['preproc']:
 
                     new_img = nb.Nifti1Image(dataobj=data_avg, affine=img.affine, header=img.header)
                     new_img.to_filename(new_file)
+
+# Leave-one-out averages
+for preproc in analysis_info['preproc']:
+    for task_name in analysis_info['task_names']:
+        for file_end in file_ends:
+            
+
+            file_list = sorted(glob.glob("{base_dir}/pp_data_new/{sub}/func/{preproc}/*{task_name}*_space-{reg}_{preproc}{file_end}".format(
+                                         base_dir=base_dir, sub=sub_name, preproc=preproc,task_name=task_name, reg=regist_type, file_end=file_end)))
+            
+            if len(file_list):
+                combi = list(it.combinations(file_list, len(file_list)-1))
+                
+                for loo_num, avg_runs in enumerate(combi):
+                    print('loo avg %i: '%loo_num +task_name+' type: '+file_end)
                     
+                    # compute average between loo runs
+                    new_file_avg = "{base_dir}/pp_data_new/{sub}/loo/{preproc}/{sub}_task-{task_name}_space-{reg}_{preproc}_avg-{loo_num}{file_end}".format(
+                                base_dir=base_dir, sub=sub_name, preproc=preproc, task_name=task_name, reg=regist_type, file_end=file_end, loo_num=loo_num+1)
+                    
+                    if regist_type == 'fsLR_den-170k':
+
+                        img = np.load(file_list[0])
+                        data_avg = np.zeros(img.shape)
+
+                        for avg_run in avg_runs:
+                            print('avg run: '+avg_run)
+                            data_val = []
+                            data_val = np.load(avg_run)
+                            data_avg += data_val/len(avg_runs)
+                            np.save(new_file_avg, data_avg)
+
+                    else: 
+                        img = nb.load(file_list[0])
+                        data_avg = np.zeros(img.shape)
+
+                        for avg_run in avg_runs:
+                            print('avg add: '+avg_run)
+                            data_val = []
+                            data_val_img = nb.load(avg_run)
+                            data_val = data_val_img.get_fdata()
+                            data_avg += data_val/len(avg_runs)
+
+                        new_img = nb.Nifti1Image(dataobj=data_avg, affine=img.affine, header=img.header)
+                        new_img.to_filename(new_file_avg)
+                        
+                        
+                    # copy loo run (left one out run)
+                    for run in file_list:
+                        if run not in avg_runs:
+                            
+                            new_file_loo = "{base_dir}/pp_data_new/{sub}/loo/{preproc}/{sub}_task-{task_name}_space-{reg}_{preproc}_loo-{loo_num}{file_end}".format(
+                                            base_dir=base_dir, sub=sub_name, preproc=preproc, task_name=task_name, reg=regist_type, file_end=file_end, loo_num=loo_num+1)
+                                                        
+                            print('loo run: '+run)
+                            os.system("{cmd} {orig} {dest}".format(cmd=trans_cmd, orig=run, dest=new_file_loo))
+
+                    
+                                
 # Anatomy
 output_files = ['dseg','desc-preproc_T1w','desc-aparcaseg_dseg','desc-aseg_dseg','desc-brain_mask']
 orig_folder = "{base_dir}/deriv_data/fmriprep_new/fmriprep/{sub}".format(base_dir=base_dir, sub=sub_name)

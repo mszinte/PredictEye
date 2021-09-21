@@ -79,13 +79,13 @@ print("pRF analysis: running on Skylake")
 data_types = ['run-1','run-2','run-3','run-4','run-5','avg']
 for data_type in data_types:
     
-    # define tc input / pRF derivatives/ pRF tc prediction
+    # define tc input / pRF fit / pRF tc prediction
     log_dir = '{base_dir}/pp_data_new/{sub}/prf/log_outputs'.format(base_dir=base_dir, sub=subject)
     
     if data_type == 'avg':
         input_fn = "{base_dir}/pp_data_new/{sub}/func/{sub}_task-pRF_space-{reg}_{preproc}_{data_type}{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        deriv_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_prf-deriv{file_ext}".format(
+        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_prf-fit{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
         pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_prf-pred{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
@@ -93,14 +93,14 @@ for data_type in data_types:
     else:
         input_fn = "{base_dir}/pp_data_new/{sub}/func/{preproc}/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        deriv_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}_prf-deriv{file_ext}".format(
+        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}_prf-fit{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
         pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}_prf-pred{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
     
-    if os.path.isfile(deriv_fn):
-        if os.path.getsize(deriv_fn) != 0:
-            print("output file {} already exists and is non-empty: aborting analysis".format(deriv_fn))
+    if os.path.isfile(fit_fn):
+        if os.path.getsize(fit_fn) != 0:
+            print("output file {} already exists and is non-empty: aborting analysis".format(fit_fn))
             continue
 
     if regist_type == 'fsLR_den-170k': data = np.load(input_fn)        
@@ -128,9 +128,9 @@ for data_type in data_types:
     reg=regist_type, preproc=preproc, data_type=data_type)
 
     # define fit cmd
-    fit_cmd = "python prf/fit/prf_fit.py {sub} {reg} {preproc} {input_fn} {deriv_fn} {pred_fn} {nb_procs}".format(
+    fit_cmd = "python prf/fit/prf_fit.py {sub} {reg} {preproc} {input_fn} {fit_fn} {pred_fn} {nb_procs}".format(
                 sub=subject, reg=regist_type, preproc=preproc, input_fn=input_fn, 
-                deriv_fn=deriv_fn, pred_fn=pred_fn, nb_procs=nb_procs)
+                fit_fn=fit_fn, pred_fn=pred_fn, nb_procs=nb_procs)
     
     # create sh folder and file
     sh_dir = "{base_dir}/pp_data_new/{sub}/prf/jobs/{sub}_task-pRF_space-{reg}_{preproc}_{data_type}{sh_end}.sh".format(

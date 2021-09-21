@@ -10,7 +10,7 @@ sys.argv[1]: subject name
 sys.argv[2]: registration type
 sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
 sys.argv[4]: recorded time series filename and path
-sys.argv[5]: glm derivatives filename and path
+sys.argv[5]: glm fit filename and path
 sys.argv[5]: glm predicted time series filename and path
 -----------------------------------------------------------------------------------------
 Output(s):
@@ -19,7 +19,7 @@ Nifti image files with fit parameters for a z slice
 To run:
 >> cd to function directory
 >> python glm/fit/glm_fit.py [subject] [registration] [preproc]
-                             [intput file] [deriv file] [predic file]
+                             [intput file] [fit file] [predic file]
 -----------------------------------------------------------------------------------------
 Exemple:
 cd /home/mszinte/projects/PredictEye/mri_analysis/
@@ -65,7 +65,7 @@ task = sys.argv[2]
 regist_type = sys.argv[3]
 preproc = sys.argv[4]
 input_fn = sys.argv[5]
-deriv_fn = sys.argv[6]
+fit_fn = sys.argv[6]
 pred_fn = sys.argv[7]
 
 # Define analysis parameters
@@ -111,11 +111,11 @@ data_indices = []
 if data.ndim == 4:
     for x,y,z in zip(data_where[0],data_where[1],data_where[2]):
         data_indices.append((x,y,z))
-    deriv_mat = np.zeros((data.shape[0],data.shape[1],data.shape[2],4*comp_num))
+    fit_mat = np.zeros((data.shape[0],data.shape[1],data.shape[2],4*comp_num))
 elif data.ndim == 2:
     for gray_ordinate in data_where[0]:
         data_indices.append((gray_ordinate))
-    deriv_mat = np.zeros((data.shape[0],4*comp_num))
+    fit_mat = np.zeros((data.shape[0],4*comp_num))
 pred_mat = np.zeros(data.shape)
 
 # run GLM
@@ -147,21 +147,21 @@ for contrast_num, contrast in enumerate(zip(cond1_label,cond2_label)):
 
     
     if contrast_num:
-        deriv = np.vstack((deriv,z_map,z_p_map,fdr,fdr_p_map))
+        fit = np.vstack((fit,z_map,z_p_map,fdr,fdr_p_map))
     else:                 
-        deriv = np.vstack((z_map,z_p_map,fdr,fdr_p_map))
+        fit = np.vstack((z_map,z_p_map,fdr,fdr_p_map))
 
 for est,vox in enumerate(data_indices):
-    deriv_mat[vox] = deriv.T[est]
+    fit_mat[vox] = fit.T[est]
     pred_mat[vox] = data_pred[est]
 
-# Save derivatives and prediction data
+# Save fit and prediction data
 if regist_type == 'fsLR_den-170k':
-    np.save(deriv_fn, deriv_mat)
+    np.save(fit_fn, fit_mat)
     np.save(pred_fn, pred_mat)
 else: 
-    deriv_img = nb.Nifti1Image(dataobj=deriv_mat, affine=data_img.affine, header=data_img.header)
-    deriv_img.to_filename(deriv_fn)
+    fit_img = nb.Nifti1Image(dataobj=fit_mat, affine=data_img.affine, header=data_img.header)
+    fit_img.to_filename(fit_fn)
     pred_img = nb.Nifti1Image(dataobj=pred_mat, affine=data_img.affine, header=data_img.header)
     pred_img.to_filename(pred_fn)
 

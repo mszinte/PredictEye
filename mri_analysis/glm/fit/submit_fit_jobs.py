@@ -85,13 +85,13 @@ for task in glm_tasks:
         
     for data_type in data_types:
     
-        # define tc input / glm derivatives/ glm tc prediction
+        # define tc input / glm fit / glm tc prediction
         log_dir = '{base_dir}/pp_data_new/{sub}/glm/log_outputs'.format(base_dir=base_dir, sub=subject)
 
         if data_type == 'avg':
             input_fn = "{base_dir}/pp_data_new/{sub}/func/{sub}_task-{task}_space-{reg}_{preproc}_{data_type}{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
-            deriv_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_space-{reg}_{preproc}_glm-deriv{file_ext}".format(
+            fit_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_space-{reg}_{preproc}_glm-fit{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
             pred_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_space-{reg}_{preproc}_glm-pred{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
@@ -99,14 +99,14 @@ for task in glm_tasks:
         else:
             input_fn = "{base_dir}/pp_data_new/{sub}/func/{preproc}/{sub}_task-{task}_{data_type}_space-{reg}_{preproc}{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
-            deriv_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_{data_type}_space-{reg}_{preproc}_glm-deriv{file_ext}".format(
+            fit_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_{data_type}_space-{reg}_{preproc}_glm-fit{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
             pred_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_{data_type}_space-{reg}_{preproc}_glm-pred{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
     
-        if os.path.isfile(deriv_fn):
-            if os.path.getsize(deriv_fn) != 0:
-                print("output file {} already exists and is non-empty: aborting analysis".format(deriv_fn))
+        if os.path.isfile(fit_fn):
+            if os.path.getsize(fit_fn) != 0:
+                print("output file {} already exists and is non-empty: aborting analysis".format(fit_fn))
                 continue
     
         # create job shell
@@ -125,9 +125,9 @@ for task in glm_tasks:
         reg=regist_type, preproc=preproc, data_type=data_type)
 
         # define fit cmd
-        fit_cmd = "python glm/fit/glm_fit.py {sub} {task} {reg} {preproc} {input_fn} {deriv_fn} {pred_fn}".format(
+        fit_cmd = "python glm/fit/glm_fit.py {sub} {task} {reg} {preproc} {input_fn} {fit_fn} {pred_fn}".format(
                     sub=subject, reg=regist_type, preproc=preproc, input_fn=input_fn, 
-                    deriv_fn=deriv_fn, pred_fn=pred_fn, task=task)
+                    fit_fn=fit_fn, pred_fn=pred_fn, task=task)
     
         # create sh folder and file
         sh_dir = "{base_dir}/pp_data_new/{sub}/glm/jobs/{sub}_task-{task}_space-{reg}_{preproc}_{data_type}{sh_end}.sh".format(

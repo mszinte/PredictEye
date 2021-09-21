@@ -10,17 +10,17 @@ sys.argv[1]: subject name
 sys.argv[2]: registration type
 sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
 sys.argv[4]: recorded time series filename and path
-sys.argv[5]: prf derivatives filename and path
+sys.argv[5]: prf fit filename and path
 sys.argv[5]: predicted time series filename and path
 sys.argv[6]: number of processors
 -----------------------------------------------------------------------------------------
 Output(s):
 Nifti image files with fit parameters for a z slice
 -----------------------------------------------------------------------------------------
-To run:
+To run :
 >> cd to function directory
 >> python fit/prf_fit.py [subject] [registration] [preproc]
-                         [intput file] [deriv file] [predic file] [nb_procs]
+                         [intput file] [fit file] [predic file] [nb_procs]
 -----------------------------------------------------------------------------------------
 Exemple:
 cd /home/mszinte/projects/PredictEye/mri_analysis/
@@ -62,7 +62,7 @@ subject = sys.argv[1]
 regist_type = sys.argv[2]
 preproc = sys.argv[3]
 input_fn = sys.argv[4]
-deriv_fn = sys.argv[5]
+fit_fn = sys.argv[5]
 pred_fn = sys.argv[6]
 nb_procs = int(sys.argv[7])
 
@@ -94,11 +94,11 @@ data_indices = []
 if data.ndim == 4:
     for x,y,z in zip(data_where[0],data_where[1],data_where[2]):
         data_indices.append((x,y,z))
-    deriv_mat = np.zeros((data.shape[0],data.shape[1],data.shape[2],6))
+    fit_mat = np.zeros((data.shape[0],data.shape[1],data.shape[2],6))
 elif data.ndim == 2:
     for gray_ordinate in data_where[0]:
         data_indices.append((gray_ordinate))
-    deriv_mat = np.zeros((data.shape[0],6))
+    fit_mat = np.zeros((data.shape[0],6))
 pred_mat = np.zeros(data.shape)
 
 # determine model
@@ -122,21 +122,21 @@ gauss_fitter.grid_fit(ecc_grid=eccs, polar_grid=polars, size_grid=sizes, pos_prf
 # iterative fit
 print("Iterative fit")
 gauss_fitter.iterative_fit(rsq_threshold=0.0001, verbose=False)
-deriv_fit = gauss_fitter.iterative_search_params
+fit_fit = gauss_fitter.iterative_search_params
 
 # Re-arrange data
 for est,vox in enumerate(data_indices):
-    deriv_mat[vox] = deriv_fit[est]
-    pred_mat[vox] = gauss_model.return_prediction(  mu_x=deriv_fit[est][0], mu_y=deriv_fit[est][1], size=deriv_fit[est][2], 
-                                                    beta=deriv_fit[est][3], baseline=deriv_fit[est][4])
+    fit_mat[vox] = fit_fit[est]
+    pred_mat[vox] = gauss_model.return_prediction(  mu_x=fit_fit[est][0], mu_y=fit_fit[est][1], size=fit_fit[est][2], 
+                                                    beta=fit_fit[est][3], baseline=fit_fit[est][4])
 
-# Save derivatives and prediction data
+# Save fit and prediction data
 if regist_type == 'fsLR_den-170k':
-    np.save(deriv_fn, deriv_mat)
+    np.save(fit_fn, fit_mat)
     np.save(pred_fn, pred_mat)
 else: 
-    deriv_img = nb.Nifti1Image(dataobj=deriv_mat, affine=data_img.affine, header=data_img.header)
-    deriv_img.to_filename(deriv_fn)
+    fit_img = nb.Nifti1Image(dataobj=fit_mat, affine=data_img.affine, header=data_img.header)
+    fit_img.to_filename(fit_fn)
     pred_img = nb.Nifti1Image(dataobj=pred_mat, affine=data_img.affine, header=data_img.header)
     pred_img.to_filename(pred_fn)
 
