@@ -35,14 +35,14 @@ the ocumotor system.
 9. Flatten hemispheres with _preproc/flatten_sbatch.py_
 10. Import in pycortex with _preproc/pycortex_import.py_
 11. run pybest (modified to save niftis) to high pass filter and denoised the data with _/preproc/pybest_sbatch.py_
-12. copy files in pp_data and average task runs together with _preproc/preproc_end.py_
-13. [optional] Save time courses as pycortex webviewer with _preproc/save_tc.py_
+12. copy files in pp_data and average task runs (including leave-one-out procedure) together with _preproc/preproc_end.py_
+13. (optional) Save time courses as pycortex webviewer with _preproc/save_tc.py_
 
 ## Post-processing
 
 ### pRFexp
-  1. run the prf fit with _fit/submit_fit.py_
-  2. combine fits and compute pRF parameters with _post_fit/post_fit.py_
+  1. run the prf fit with _fit/run_prf_fit.sh_
+  2. compute pRF parameters and leave-one-out cross-validated r2 with _post_fit/post_fit.py_
   3. make pycortex maps using _post_fit/pycortex_maps.py_ or with _post_fit/run_prf_maps.sh_
   4. draw ROIs using on overlays using Inkscape
   5. create hdf files per roi using _post_fit/roi_to_hdf5.py_

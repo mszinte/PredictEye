@@ -76,7 +76,7 @@ proj_name = 'b161'
 print("pRF analysis: running on Skylake")
 
 # Create job and log output folders
-data_types = ['run-1','run-2','run-3','run-4','run-5','avg']
+data_types = ['avg-1','avg-2','avg-3','avg-4','avg-5','avg']
 for data_type in data_types:
     
     # define tc input / pRF fit / pRF tc prediction
@@ -85,17 +85,16 @@ for data_type in data_types:
     if data_type == 'avg':
         input_fn = "{base_dir}/pp_data_new/{sub}/func/{sub}_task-pRF_space-{reg}_{preproc}_{data_type}{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_prf-fit{file_ext}".format(
+        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type}_prf-fit{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_prf-pred{file_ext}".format(
+        pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type}_prf-pred{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        
     else:
-        input_fn = "{base_dir}/pp_data_new/{sub}/func/{preproc}/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}{file_ext}".format(
+        input_fn = "{base_dir}/pp_data_new/{sub}/loo/{preproc}/{sub}_task-pRF_space-{reg}_{preproc}_{data_type}{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}_prf-fit{file_ext}".format(
+        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type}_prf-fit{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}_prf-pred{file_ext}".format(
+        pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type}_prf-pred{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
     
     if os.path.isfile(fit_fn):
@@ -111,6 +110,7 @@ for data_type in data_types:
     num_vox = mask[...].sum()
     job_dur_obj = datetime.timedelta(hours=np.ceil(num_vox/fit_per_hour))
     job_dur = "{:1d}-{:02d}:00:00".format(job_dur_obj.days,divmod(job_dur_obj.seconds,3600)[0])
+    
     
     # create job shell
     slurm_cmd = """\
