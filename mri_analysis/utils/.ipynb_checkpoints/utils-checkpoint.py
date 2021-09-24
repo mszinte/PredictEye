@@ -360,7 +360,8 @@ def prf_fit2deriv(input_mat, stim_width, stim_height):
     row07 : coverage or nan
     row08 : x
     row09 : y
-    ['rsq','ecc','polar_real','polar_imag','size','amp','baseline','x','y','cov']
+    row10 : leave-one-out test/prediction rsquare average
+    ['rsq','ecc','polar_real','polar_imag','size','amp','baseline','x','y','cov','loo_rsq']
     """
 
     # Imports
@@ -387,32 +388,33 @@ def prf_fit2deriv(input_mat, stim_width, stim_height):
     x_idx, y_idx, sigma_idx, beta_idx, baseline_idx, rsq_idx = 0, 1, 2, 3, 4, 5
 
     # change to nan empty voxels
-    fit[fit[:,:,:,rsq_idx] == 0] = np.nan
+    fit[fit[...,rsq_idx] == 0] = np.nan
     
     # r-square
-    rsq = fit[:,:,:,rsq_idx]
+    rsq = fit[...,rsq_idx]
 
     # eccentricity
-    ecc = np.nan_to_num(np.sqrt(fit[:,:,:,x_idx]**2 + fit[:,:,:,y_idx]**2))
+    ecc = np.nan_to_num(np.sqrt(fit[...,x_idx]**2 + fit[...,y_idx]**2))
 
     # polar angle
-    complex_polar = fit[:,:,:,x_idx] + 1j * fit[:,:,:,y_idx]
+    complex_polar = fit[...,x_idx] + 1j * fit[...,y_idx]
     normed_polar = complex_polar / np.abs(complex_polar)
     polar_real = np.real(normed_polar)
     polar_imag = np.imag(normed_polar)
     
     # size
-    size_ = fit[:,:,:,sigma_idx].astype(np.float64)
+    size_ = fit[...,sigma_idx].astype(np.float64)
     size_[size_<1e-4] = 1e-4
 
     # amplitude
-    amp = fit[:,:,:,beta_idx]
+    amp = fit[...,beta_idx]
     
     # baseline
-    baseline = fit[:,:,:,baseline_idx]
+    baseline = fit[...,baseline_idx]
 
     # coverage
-    deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 50), np.linspace(-30, 30, 50))         # define prfs in visual space
+    #deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 50), np.linspace(-30, 30, 50))         # define prfs in visual space
+    deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 5), np.linspace(-30, 30, 5))         # define prfs in visual space
     flat_fit = fit.reshape((-1, fit.shape[-1])).astype(np.float64)
     rfs = generate_og_receptive_fields( flat_fit[:,x_idx],
                                         flat_fit[:,y_idx],
@@ -429,16 +431,16 @@ def prf_fit2deriv(input_mat, stim_width, stim_height):
     cov = cov.reshape(baseline.shape)
 
     # x
-    x = fit[:,:,:,x_idx]
+    x = fit[...,x_idx]
 
     # y
-    y = fit[:,:,:,y_idx]
+    y = fit[...,y_idx]
 
     # Save results
     if np.ndim(fit) == 4:
-        deriv = np.zeros((fit.shape[0],fit.shape[1],fit.shape[2],10))*np.nan
+        deriv = np.zeros((fit.shape[0],fit.shape[1],fit.shape[2],11))*np.nan
     elif np.ndim(fit) == 2:
-        deriv = np.zeros((fit.shape[0],10))*np.nan
+        deriv = np.zeros((fit.shape[0],11))*np.nan
         
     deriv[...,0]  = rsq
     deriv[...,1]  = ecc

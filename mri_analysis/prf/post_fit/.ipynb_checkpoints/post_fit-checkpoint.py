@@ -55,7 +55,6 @@ from utils.utils import prf_fit2deriv
 # --------------------
 import nibabel as nb
 from sklearn.metrics import r2_score
-import itertools as it
 
 # Define analysis parameters
 # --------------------------
@@ -82,45 +81,90 @@ stim_width = analysis_info['stim_width']
 stim_height = analysis_info['stim_height']
 
 # Create job and log output folders
-data_types = ['run-1','run-2','run-3','run-4','run-5','avg']
-for data_type in data_types:
-    if data_type == 'avg':
-        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_prf-fit{file_ext}".format(
-                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        deriv_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_prf-deriv{file_ext}".format(
-                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
+data_types_avg = ['avg-1','avg-2','avg-3','avg-4','avg-5','avg']
+data_types_loo = ['loo-1','loo-2','loo-3','loo-4','loo-5','avg']
+
+
+
+for data_type_avg, data_type_loo in zip(data_types_avg,data_types_loo):
+    
+
+    if data_type_avg == 'avg':
+        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}_prf-fit{file_ext}".format(
+                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
+        deriv_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}_prf-deriv{file_ext}".format(
+                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
+        
+        pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}_prf-pred{file_ext}".format(
+                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
+        test_fn = input_fn = "{base_dir}/pp_data_new/{sub}/func/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}{file_ext}".format(
+                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
+        
     else:
-        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}_prf-fit{file_ext}".format(
-                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
-        deriv_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_{data_type}_space-{reg}_{preproc}_prf-deriv{file_ext}".format(
-                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext)
+        fit_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}_prf-fit{file_ext}".format(
+                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
+        deriv_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}_prf-deriv{file_ext}".format(
+                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
+        pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}_prf-pred{file_ext}".format(
+                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
+        test_fn = "{base_dir}/pp_data_new/{sub}/loo/{preproc}/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_loo}{file_ext}".format(
+                        base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_loo=data_type_loo, file_ext=file_ext)
+    
     
     if os.path.isfile(fit_fn) == False:
         sys.exit('Missing files, analysis stopped : %s'%fit_fn)
     else:
         print('Computing derivatives: %s'%deriv_fn)
     
+    # Compute derivatives
     
     # Load data
     if regist_type == 'fsLR_den-170k': 
-        input_mat = np.load(fit_fn)
+        fit_mat = np.load(fit_fn)
+        pred_mat = np.load(pred_fn)
+        test_mat = np.load(test_fn)
+        if cifti_mode == 'surf': num_elmt = test_mat.shape[0]
+        elif cifti_mode == 'subc': num_elmt = test_mat.shape[0]*test_mat.shape[1]*test_mat.shape[2]
     else: 
-        input_img = nb.load(fit_fn)
-        input_mat = input_img.get_fdata()
-    
-    deriv_mat = prf_fit2deriv(input_mat=input_mat, stim_width=stim_width, stim_height=stim_height)
+        fit_img = nb.load(fit_fn)
+        fit_mat = fit_img.get_fdata()
+        pred_img = nb.load(pred_fn)
+        pred_mat = pred_img.get_fdata()
+        test_img = nb.load(test_fn)
+        test_mat = test_img.get_fdata()
+        num_elmt = test_mat.shape[0]*test_mat.shape[1]*test_mat.shape[2]
 
+    deriv_mat = prf_fit2deriv(input_mat=fit_mat, stim_width=stim_width, stim_height=stim_height)
+    
+    # Compute leave-one-out cross-validated r2
+    flat_test_mat = test_mat.reshape((num_elmt,test_mat.shape[-1]))
+    flat_pred_mat = pred_mat.reshape((num_elmt,pred_mat.shape[-1]))
+    flat_pred_mat[np.isnan(flat_pred_mat)]=0
+    
+    r2_mat = r2_score(flat_test_mat.T, flat_pred_mat.T, multioutput='raw_values')
+    r2_mat = np.power(r2_mat,2)
+    deriv_mat[...,10] = r2_mat.reshape(deriv_mat.shape[:-1])
+    
     # save data
     if regist_type == 'fsLR_den-170k':
         np.save(deriv_fn, deriv_mat)
     else: 
-        deriv_img = nb.Nifti1Image(dataobj=deriv_mat, affine=input_img.affine, header=input_img.header)
+        deriv_img = nb.Nifti1Image(dataobj=deriv_mat, affine=fit_img.affine, header=fit_img.header)
         deriv_img.to_filename(deriv_fn)
-        
+    
+    if data_type_avg != 'avg':
+        if data_type_avg == 'avg-1':
+            deriv_mat_avg = np.zeros(deriv_mat.shape)
+        # compute average of loo derivatives
+        deriv_mat_avg += deriv_mat/(len(data_types_avg)-1)
+    
+# save average of derivatives
+deriv_loo_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_avg-loo_prf-deriv{file_ext}".format(
+                    base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
 
-
-combi = list(it.combinations([1,2,3,4,5], 2))
-for i,(train_idx, test_idx) in enumerate(combi):
-    mat_test = 
-    mat_pred = 
-    r2_score(, preds[test_idx, :], multioutput='raw_values')
+print('Computing derivatives: %s'%deriv_loo_fn)
+if regist_type == 'fsLR_den-170k':
+    np.save(deriv_loo_fn, deriv_mat_avg)
+else: 
+    deriv_img = nb.Nifti1Image(dataobj=deriv_mat_avg, affine=fit_img.affine, header=fit_img.header)
+    deriv_img.to_filename(deriv_loo_fn)
