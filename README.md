@@ -42,8 +42,8 @@ the ocumotor system.
 
 ### pRFexp
   1. run the prf fit with _fit/run_prf_fit.sh_
-  2. compute pRF parameters and leave-one-out cross-validated r2 with _post_fit/post_fit.py_
-  3. make pycortex maps using _post_fit/pycortex_maps.py_ or with _post_fit/run_prf_maps.sh_
+  2. compute pRF parameters and leave-one-out cross-validated r2 with _post_fit/run_post_fit.sh_
+  3. make pycortex maps using with _post_fit/run_prf_maps.sh_
   4. draw ROIs using on overlays using Inkscape
   5. create hdf files per roi using _post_fit/roi_to_hdf5.py_
   6. create pandas files per roi using _post_fit/hdf5_to_pandas.py_

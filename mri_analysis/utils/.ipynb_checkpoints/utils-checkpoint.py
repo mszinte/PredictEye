@@ -105,8 +105,8 @@ def set_pycortex_config_file(data_folder):
     # deb = ipdb.set_trace
 
     # Define the new database and colormaps folder
-    pycortex_db_folder = data_folder + '/pp_data/cortex/db/'
-    pycortex_cm_folder = data_folder + '/pp_data/cortex/colormaps/'
+    pycortex_db_folder = data_folder + '/pp_data_new/cortex/db/'
+    pycortex_cm_folder = data_folder + '/pp_data_new/cortex/colormaps/'
 
     # Get pycortex config file location
     pycortex_config_file  = cortex.options.usercfg
@@ -413,8 +413,8 @@ def prf_fit2deriv(input_mat, stim_width, stim_height):
     baseline = fit[...,baseline_idx]
 
     # coverage
-    #deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 50), np.linspace(-30, 30, 50))         # define prfs in visual space
-    deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 5), np.linspace(-30, 30, 5))         # define prfs in visual space
+    deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 50), np.linspace(-30, 30, 50))         # define prfs in visual space
+    #deg_x, deg_y = np.meshgrid(np.linspace(-30, 30, 5), np.linspace(-30, 30, 5))         # define prfs in visual space
     flat_fit = fit.reshape((-1, fit.shape[-1])).astype(np.float64)
     rfs = generate_og_receptive_fields( flat_fit[:,x_idx],
                                         flat_fit[:,y_idx],

@@ -7,15 +7,16 @@ Combine fit files, compute pRF derivatives, compute CV R2
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: subject name (e.g. sub-01)
+sys.argv[2]: registration (e.g. T1w)
 sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
-sys.argv[4]: registration (e.g. T1w)
+sys.argv[4]: cifti data mode (subc: subcortical, surf: surface)
 -----------------------------------------------------------------------------------------
 Output(s):
 Combined estimate nifti file and pRF derivative nifti file
 -----------------------------------------------------------------------------------------
 To run:
 >> cd to function
->> python post_fit/post_fit.py [subject] [task] [preproc] [reg]
+>> python post_fit/post_fit.py [subject] [reg] [preproc] [cifti-mode]
 -----------------------------------------------------------------------------------------
 Exemple:
 cd /home/mszinte/projects/PredictEye/mri_analysis/
