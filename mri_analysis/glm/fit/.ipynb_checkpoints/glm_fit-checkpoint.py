@@ -7,6 +7,7 @@ GLM fit code
 -----------------------------------------------------------------------------------------
 Input(s):
 sys.argv[1]: subject name
+sys.argv[2]: task
 sys.argv[2]: registration type
 sys.argv[3]: pre-processing steps (fmriprep_dct or fmriprep_dct_pca)
 sys.argv[4]: recorded time series filename and path
@@ -18,12 +19,12 @@ Nifti image files with fit parameters for a z slice
 -----------------------------------------------------------------------------------------
 To run:
 >> cd to function directory
->> python glm/fit/glm_fit.py [subject] [registration] [preproc]
+>> python glm/fit/glm_fit.py [subject] [task] [registration] [preproc]
                              [intput file] [fit file] [predic file]
 -----------------------------------------------------------------------------------------
 Exemple:
 cd /home/mszinte/projects/PredictEye/mri_analysis/
-python glm/fit/glm_fit.py sub-01 T1w fmriprep_dct /path_to... /path_to... /path_to...
+python glm/fit/glm_fit.py sub-01 pMF T1w fmriprep_dct /path_to... /path_to... /path_to...
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------

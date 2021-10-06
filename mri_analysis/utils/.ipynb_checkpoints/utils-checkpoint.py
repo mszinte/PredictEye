@@ -147,7 +147,7 @@ def set_pycortex_config_file(data_folder):
     os.rename(new_pycortex_config_file, pycortex_config_file)
     return None
 
-def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='VolumeRGB',cmap='Viridis',cbar = 'discrete',cmap_steps = 255,\
+def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,cortex_type='VolumeRGB',cmap='Viridis',cbar = 'discrete',cmap_steps = 255,\
                         alpha = None,depth = 1,thick = 1,height = 1024,sampler = 'nearest',\
                         with_curvature = True,with_labels = False,with_colorbar = False,\
                         with_borders = False,curv_brightness = 0.95,curv_contrast = 0.05,add_roi = False,\
@@ -163,7 +163,7 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
     vmins               : minimal values of 1D 2D colormap [0] = 1D, [1] = 2D
     vmaxs               : minimal values of 1D/2D colormap [0] = 1D, [1] = 2D
     description         : plot title
-    volume_type         : cortex function to create the volume (VolumeRGB or Volume2D)
+    cortex_type         : cortex function to create the volume (VolumeRGB, Volume2D, VertexRGB)
     cbar                : color bar layout
     cmap_steps          : number of colormap bins
     alpha               : alpha map
@@ -185,7 +185,7 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
     zoom_margin         : margin in mm around the zoom
     Returns
     -------
-    vertex_rgb - pycortex vertex file
+    braindata - pycortex volumr or vertex file
     """
     
     import cortex
@@ -199,16 +199,14 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
     deb = ipdb.set_trace
     
     # define colormap
-    try:
-        base = plt.cm.get_cmap(cmap)
-    except:
-        base = cortex.utils.get_cmap(cmap)
-
+    try: base = plt.cm.get_cmap(cmap)
+    except: base = cortex.utils.get_cmap(cmap)
+    
     if '_alpha' in cmap: base.colors = base.colors[1,:,:]
     val = np.linspace(0, 1,cmap_steps+1,endpoint=False)
     colmap = colors.LinearSegmentedColormap.from_list('my_colmap',base(val), N = cmap_steps)
     
-    if volume_type=='VolumeRGB':
+    if cortex_type=='VolumeRGB':
         # convert data to RGB
         vrange = float(vmax) - float(vmin)
         norm_data = ((data-float(vmin))/vrange)*cmap_steps
@@ -216,14 +214,14 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
         alpha = alpha*255.0
 
         # define volume RGB
-        volume = cortex.VolumeRGB(  channel1 = mat[...,0].T.astype(np.uint8),
+        braindata = cortex.VolumeRGB(  channel1 = mat[...,0].T.astype(np.uint8),
                                     channel2 = mat[...,1].T.astype(np.uint8),
                                     channel3 = mat[...,2].T.astype(np.uint8),
                                     alpha = alpha.T.astype(np.uint8),
                                     subject = subject,
                                     xfmname = xfmname)
-    elif volume_type=='Volume2D':
-        volume = cortex.Volume2D(dim1 = data.T,
+    elif cortex_type=='Volume2D':
+        braindata = cortex.Volume2D(dim1 = data.T,
                                  dim2 = alpha.T,
                                  subject = subject,
                                  xfmname = xfmname,
@@ -233,28 +231,45 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
                                  vmax = vmax[0],
                                  vmin2 = vmin[1],
                                  vmax2 = vmax[1])
+    elif cortex_type=='VertexRGB':
+        
+        # convert data to RGB
+        vrange = float(vmax) - float(vmin)
+        norm_data = ((data-float(vmin))/vrange)*cmap_steps
+        mat = colmap(norm_data.astype(int))*255.0
+        alpha = alpha*255.0
+        
+        # define Vertex RGB
+        braindata = cortex.VertexRGB( red = mat[...,0].astype(np.uint8),
+                                      green = mat[...,1].astype(np.uint8),
+                                      blue = mat[...,2].astype(np.uint8),
+                                      subject = subject,
+                                      alpha = alpha.astype(np.uint8))
+        
     
-    volume_fig = cortex.quickshow(  braindata = volume,
-                                    depth = depth,
-                                    thick = thick,
-                                    height = height,
-                                    sampler = sampler,
-                                    with_curvature = with_curvature,
-                                    with_labels = with_labels,
-                                    with_colorbar = with_colorbar,
-                                    with_borders = with_borders,
-                                    curvature_brightness = curv_brightness,
-                                    curvature_contrast = curv_contrast)
+    braindata_fig = cortex.quickshow(braindata = braindata,
+                                     depth = depth,
+                                     thick = thick,
+                                     height = height,
+                                     sampler = sampler,
+                                     with_curvature = with_curvature,
+                                     with_labels = with_labels,
+                                     with_colorbar = with_colorbar,
+                                     with_borders = with_borders,
+                                     curvature_brightness = curv_brightness,
+                                     curvature_contrast = curv_contrast)
 
    
     if cbar == 'polar':
         
-        base = cortex.utils.get_cmap(cmap)
+        try: base = plt.cm.get_cmap(cmap)
+        except: base = cortex.utils.get_cmap(cmap)
+        
         val = np.arange(1,cmap_steps+1)/cmap_steps - (1/(cmap_steps*2))
         val = np.fmod(val+col_offset,1)
         colmap = colors.LinearSegmentedColormap.from_list('my_colmap',base(val),N = cmap_steps)
 
-        cbar_axis = volume_fig.add_axes([0.5, 0.07, 0.8, 0.2], projection='polar')
+        cbar_axis = braindata_fig.add_axes([0.5, 0.07, 0.8, 0.2], projection='polar')
         norm = colors.Normalize(0, 2*np.pi)
         t = np.linspace(0,2*np.pi,200,endpoint=True)
         r = [0,1]
@@ -271,7 +286,7 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
         # Ecc color bar
         colorbar_location = [0.5, 0.07, 0.8, 0.2]
         n = 200
-        cbar_axis = volume_fig.add_axes(colorbar_location, projection='polar')
+        cbar_axis = braindata_fig.add_axes(colorbar_location, projection='polar')
 
         t = np.linspace(0,2*np.pi, n)
         r = np.linspace(0,1, n)
@@ -286,7 +301,7 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
         box = cbar_axis.get_position()
         cbar_axis.set_yticklabels([])
         cbar_axis.set_xticklabels([])
-        axl = volume_fig.add_axes(  [1.8*box.xmin,
+        axl = braindata_fig.add_axes(  [1.8*box.xmin,
                                         0.5*(box.ymin+box.ymax),
                                         box.width/600,
                                         box.height*0.5])
@@ -309,16 +324,21 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
         cmaplist = [colmap(i) for i in range(colmap.N)]
 
         # define the bins and normalize
-        bounds = np.linspace(vmin, vmax, cmap_steps + 1) if volume_type=='VolumeRGB' else np.linspace(vmin[0], vmax[0], cmap_steps + 1)
-        bounds_label = np.linspace(vmin, vmax, 3) if volume_type=='VolumeRGB' else np.linspace(vmin[0], vmax[0], 3)
+        if cortex_type=='Volume2D':
+            bounds = np.linspace(vmin[0], vmax[0], cmap_steps + 1)
+            bounds_label = np.linspace(vmin[0], vmax[0], 3)
+        else:
+            bounds = np.linspace(vmin, vmax, cmap_steps + 1)  
+            bounds_label = np.linspace(vmin, vmax, 3)
+
         norm = mpl.colors.BoundaryNorm(bounds, colmap.N)
             
-        cbar_axis = volume_fig.add_axes(colorbar_location)
+        cbar_axis = braindata_fig.add_axes(colorbar_location)
         cb = mpl.colorbar.ColorbarBase(cbar_axis,cmap = colmap,norm = norm,ticks = bounds_label,boundaries = bounds)
 
     # add to overalt
     if add_roi == True:
-        cortex.utils.add_roi(   data = volume,
+        cortex.utils.add_roi(   data = braindata,
                                 name = roi_name,
                                 open_inkscape = False,
                                 add_path = False,
@@ -331,7 +351,7 @@ def draw_cortex_vertex(subject,xfmname,data,vmin,vmax,description,volume_type='V
                                 curvature_brightness = curv_brightness,
                                 curvature_contrast = curv_contrast)
 
-    return volume
+    return braindata
 
 
 def prf_fit2deriv(input_mat, stim_width, stim_height):
