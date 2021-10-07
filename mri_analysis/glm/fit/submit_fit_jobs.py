@@ -82,7 +82,7 @@ for task in glm_tasks:
         data_types = ['avg-1','avg-2','avg-3','avg-4','avg-5','avg']
     else: 
         data_types = ['avg-1','avg-2','avg']
-        
+    
     for data_type in data_types:
     
         # define tc input / glm fit / glm tc prediction
@@ -99,9 +99,9 @@ for task in glm_tasks:
         else:
             input_fn = "{base_dir}/pp_data_new/{sub}/loo/{preproc}/{sub}_task-{task}_space-{reg}_{preproc}_{data_type}{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
-            fit_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_space-{reg}_{preproc}_glm-fit_{data_type}{file_ext}".format(
+            fit_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_space-{reg}_{preproc}_{data_type}_glm-fit{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
-            pred_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_space-{reg}_{preproc}_glm-pred_{data_type}{file_ext}".format(
+            pred_fn = "{base_dir}/pp_data_new/{sub}/glm/fit/{sub}_task-{task}_space-{reg}_{preproc}_{data_type}_glm-pred{file_ext}".format(
                             base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type=data_type, file_ext=file_ext, task=task)
     
         if os.path.isfile(fit_fn):

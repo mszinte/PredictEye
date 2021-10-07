@@ -98,7 +98,7 @@ for data_type_avg, data_type_loo in zip(data_types_avg,data_types_loo):
         
         pred_fn = "{base_dir}/pp_data_new/{sub}/prf/fit/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}_prf-pred{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
-        test_fn = input_fn = "{base_dir}/pp_data_new/{sub}/func/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}{file_ext}".format(
+        test_fn =  "{base_dir}/pp_data_new/{sub}/func/{sub}_task-pRF_space-{reg}_{preproc}_{data_type_avg}{file_ext}".format(
                         base_dir=base_dir, sub=subject, reg=regist_type, preproc=preproc, data_type_avg=data_type_avg, file_ext=file_ext)
         
     else:

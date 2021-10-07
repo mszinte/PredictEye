@@ -40,18 +40,18 @@ the ocumotor system.
 
 ## Post-processing
 
-### pRFexp
-  1. run the prf fit with _fit/run_prf_fit.sh_
-  2. compute pRF parameters and leave-one-out cross-validated r2 with _post_fit/run_post_fit.sh_
-  3. make pycortex maps using with _post_fit/run_prf_maps.sh_
+### pRF
+  1. run the prf fit with _prf/fit/run_prf_fit.sh_
+  2. compute pRF parameters and leave-one-out cross-validated r2 with _prf/post_fit/run_post_fit.sh_
+  3. make pycortex maps using with _prf/post_fit/run_prf_maps.sh_
   4. draw ROIs using on overlays using Inkscape
   5. create hdf files per roi using _post_fit/roi_to_hdf5.py_
   6. create pandas files per roi using _post_fit/hdf5_to_pandas.py_
 
-### pMFexp
-  1. compute motor design with _fit/pmf_design.py_ 
-  2. run the prf fit with _fit/submit_fit.py_
-  3. combine fits and compute pRF parameters with _post_fit/post_fit.py_
+### pMF/PurLoc/SacLoc/SacVELoc/PurVELoc
+  1. compute motor design with _glm/fit/pmf_design.py_ 
+  2. run the prf fit with _glm/fit/submit_fit.py_
+  3. combine fits and compute pRF parameters with _glm/post_fit/post_fit.py_
   4. make pycortex maps using _post_fit/pycortex_maps.py_
   5. adjust ROIs using on overlays using Inkscape
   6. create hdf files per roi using _post_fit/roi_to_hdf5.py_
@@ -65,6 +65,11 @@ the ocumotor system.
   5. locVisEndEMexp:
 
 ### GLMs
+  0. compute glm design with _glm/fit/gen_glm_design.py_
+  1. run the prf fit with _fit/run_prf_fit.sh_ 
+  2. compute pRF parameters and leave-one-out cross-validated r2 with _post_fit/run_post_fit.sh_
+  3. make pycortex maps using with _post_fit/run_prf_maps.sh_
+  
   1. Compute GLM for each tasks with _glm/fit_glm.py_ or with _glm/run_glm.sh_
   2. Plot and save flatmaps with _glm/pycortex_glm.py_ or with _glm/run_glm_maps.sh_
 
