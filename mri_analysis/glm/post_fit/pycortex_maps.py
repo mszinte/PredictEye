@@ -17,15 +17,15 @@ Pycortex flatmaps figures
 To run:
 On invibe server
 >> cd to function
->> python prf/post_fit/pycortex_maps.py [subject] [reg] [preproc] [svg]
+>> python glm/post_fit/pycortex_maps.py [subject] [reg] [preproc] [svg]
 -----------------------------------------------------------------------------------------
 Exemple:
 [TO RUN LOCALLY OR ON INVIBE SERVER]
 cd ~/disks/meso_H/projects/PredictEye/mri_analysis/
-ipython prf/post_fit/pycortex_maps.py sub-01 T1w fmriprep_dct 0
-ipython prf/post_fit/pycortex_maps.py sub-01 fsLR_den-170k fmriprep_dct 0
-ipython prf/post_fit/pycortex_maps.py sub-01 T1w fmriprep_dct_pca 0
-ipython prf/post_fit/pycortex_maps.py sub-01 fsLR_den-170k fmriprep_dct_pca 0
+ipython glm/post_fit/pycortex_maps.py sub-01 T1w fmriprep_dct 0
+ipython glm/post_fit/pycortex_maps.py sub-01 fsLR_den-170k fmriprep_dct 0
+ipython glm/post_fit/pycortex_maps.py sub-01 T1w fmriprep_dct_pca 0
+ipython glm/post_fit/pycortex_maps.py sub-01 fsLR_den-170k fmriprep_dct_pca 0
 -----------------------------------------------------------------------------------------
 Written by Martin Szinte (martin.szinte@gmail.com)
 -----------------------------------------------------------------------------------------
@@ -81,11 +81,25 @@ with open('settings.json') as f:
     json_s = f.read()
     analysis_info = json.loads(json_s)
 
-# Define folder
-# -------------
+# Define settings
+# ---------------
 xfm_name = analysis_info["xfm_name"]
 base_dir = analysis_info["base_dir_local"]
-deriv_dir = "{}/pp_data_new/{}/prf/fit".format(base_dir,subject)
+deriv_dir = "{}/pp_data_new/{}/glm/fit".format(base_dir,subject)
+glm_tasks = analysis_info['glm_task_names']
+glm_vmin = analysis_info["glm_vmin"]
+glm_vmax = analysis_info["glm_vmax"]
+data_types = ['avg','avg-loo']
+cvrsq_val = analysis_info["cvr2_range"]
+
+# Create folder
+# -------------
+flatmaps_dir = '{}/pp_data_new/{}/glm/pycortex/flatmaps'.format(base_dir, subject)
+datasets_dir = '{}/pp_data_new/{}/glm/pycortex/datasets'.format(base_dir, subject)
+try: os.makedirs(flatmaps_dir); 
+except: pass
+try: os.makedirs(datasets_dir)
+except: pass
 
 # Set pycortex db and colormaps
 # -----------------------------
@@ -93,90 +107,90 @@ set_pycortex_config_file(base_dir)
 
 # Pycortex plots
 # --------------
-rsq_idx, ecc_idx, polar_real_idx, polar_imag_idx , size_idx, \
-    amp_idx, baseline_idx, cov_idx, x_idx, y_idx, cv_rsq_idx = 0,1,2,3,4,5,6,7,8,9,10
-
-cmap_polar, cmap_uni, cmap_ecc_size = 'hsv', 'Reds', 'Spectral'
-col_offset = 1.0/14.0
+cmap, cmap_uni= 'RdBu_r', 'Reds'
 cmap_steps = 255
 
 print('save flatmaps')
-maps_names = []
-flatmaps_dir = '{}/pp_data_new/{}/prf/pycortex/flatmaps'.format(base_dir, subject)
+for task in glm_tasks:
+    if task == 'SacLoc':
+        cond1_label, cond2_label = ['Sac'], ['Fix']
+        z_idx, z_p_idx, fdr_idx, fdr_p_idx, cv_rsq_idx = [0],[1],[2],[3],4
+    elif task == 'PurLoc':
+        cond1_label, cond2_label = ['Pur'], ['Fix']
+        z_idx, z_p_idx, fdr_idx, fdr_p_idx, cv_rsq_idx = [0],[1],[2],[3],4
+    elif task == 'SacVELoc':
+        cond1_label, cond2_label = ['SacExo','SacExo','SacEndo'], ['SacEndo','Fix','Fix']
+        z_idx, z_p_idx, fdr_idx, fdr_p_idx, cv_rsq_idx = [0,4,8],[1,5,9],[2,6,10],[3,7,11],12
+    elif task == 'PurVELoc':
+        cond1_label, cond2_label = ['PurExo','PurExo','PurEndo'], ['PurEndo','Fix','Fix']
+        z_idx, z_p_idx, fdr_idx, fdr_p_idx, cv_rsq_idx = [0,4,8],[1,5,9],[2,6,10],[3,7,11],12
+    elif task == 'pMF':
+        cond1_label, cond2_label = ['PurSac'], ['Fix']
+        z_idx, z_p_idx, fdr_idx, fdr_p_idx, cv_rsq_idx = [0],[1],[2],[3],4
 
-try: os.makedirs(flatmaps_dir)
-except: pass
+    maps_names = []
+    for data_type in data_types:
 
-data_types = ['avg','avg-loo']
-for data_type in data_types:
+        # Load data
+        deriv_fn = "{}/{}_task-{}_space-{}_{}_{}_glm-deriv{}".format(deriv_dir, subject, task, regist_type, preproc, data_type, file_ext)
 
-    # Load data
-    deriv_fn = "{}/{}_task-pRF_space-{}_{}_{}_prf-deriv{}".format(deriv_dir, subject, regist_type, preproc, data_type,file_ext)
-    
-    if regist_type == 'fsLR_den-170k': deriv_mat = np.load(deriv_fn)
-    else: deriv_mat = nb.load(deriv_fn).get_fdata()
-
-    # R-square
-    rsq_data = deriv_mat[...,rsq_idx]
-    alpha = rsq_data
-    param_rsq = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': rsq_data, 'vmin': 0,'vmax': 1,'cbar': 'discrete', 'cortex_type': cortex_type,
-                 'description': 'pRF rsquare', 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
-    maps_names.append('rsq')
-    
-    # CV-R-square
-    cv_rsq_data = deriv_mat[...,cv_rsq_idx]
-    param_cv_rsq = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': cv_rsq_data, 'vmin': 0,'vmax': 1,'cbar': 'discrete', 'cortex_type': cortex_type,
-                 'description': 'pRF cv-rsquare', 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
-    maps_names.append('cv_rsq')
-
-    # Polar angle
-    pol_comp_num = deriv_mat[...,polar_real_idx] + 1j * deriv_mat[...,polar_imag_idx]
-    polar_ang = np.angle(pol_comp_num)
-    ang_norm = (polar_ang + np.pi) / (np.pi * 2.0)
-    ang_norm = np.fmod(ang_norm + col_offset,1)
-    param_polar = { 'data': ang_norm, 'cmap': cmap_polar, 'alpha': alpha, 'vmin': 0, 'vmax': 1, 'cmap_steps': cmap_steps, 'cortex_type': cortex_type,
-                    'cbar': 'polar', 'col_offset': col_offset, 'description': 'pRF polar:{cmap_steps:3.0f} steps'.format(cmap_steps=cmap_steps), 
-                    'curv_brightness': 0.1, 'curv_contrast': 0.25, 'add_roi': save_svg}
-    exec('param_polar_{cmap_steps} = param_polar'.format(cmap_steps = int(cmap_steps)))
-    exec('maps_names.append("polar_{cmap_steps}")'.format(cmap_steps = int(cmap_steps)))
-
-    # Eccentricity
-    ecc_data = deriv_mat[...,ecc_idx]
-    param_ecc = {'data': ecc_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 'vmin': 0, 'vmax': 15,'cbar': 'ecc', 'cortex_type': cortex_type,
-                 'description': 'pRF eccentricity', 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': save_svg}
-    maps_names.append('ecc')
-
-    # Size
-    size_data = deriv_mat[...,size_idx]
-    param_size = {'data': size_data, 'cmap': cmap_ecc_size, 'alpha': alpha, 'vmin': 0, 'vmax': 8, 'cbar': 'discrete', 'cortex_type':cortex_type,
-                  'description': 'pRF size', 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
-    maps_names.append('size')
-
-    # Coverage
-    cov_data = deriv_mat[...,cov_idx]
-    param_cov = {'data': cov_data, 'cmap': cmap_uni, 'alpha': alpha,'vmin': 0, 'vmax': 1, 'cbar': 'discrete', 'cortex_type':cortex_type,
-                'description': 'pRF coverage', 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
-    maps_names.append('cov')
-
-    # Draw flatmaps
-    volumes = {}
-    for maps_name in maps_names:
-
-        # create flatmap
-        roi_name = '{}_pRF_{}_{}_{}'.format(maps_name, regist_type, preproc, data_type)
-        roi_param = {'subject': subject2draw, 'xfmname': xfm_name, 'roi_name': roi_name}
-        print(roi_name)
-        exec('param_{}.update(roi_param)'.format(maps_name))
-        exec('volume_{maps_name} = draw_cortex_vertex(**param_{maps_name})'.format(maps_name=maps_name))
-        exec("plt.savefig('{}/{}_space-{}_{}_{}_prf-{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, data_type, maps_name))
-        plt.close()
-
-        # save flatmap as dataset
-        exec('vol_description = param_{}["description"]'.format(maps_name))
-        exec('volume = volume_{}'.format(maps_name))
-        volumes.update({vol_description:volume})
+        if regist_type == 'fsLR_den-170k': deriv_mat = np.load(deriv_fn)
+        else: deriv_mat = nb.load(deriv_fn).get_fdata()
         
-    # save dataset
-    dataset_file = "{}/{}_space-{}_{}_{}_prf-deriv.hdf".format(flatmaps_dir, subject, regist_type, preproc, data_type)
-    dataset = cortex.Dataset(data = volumes)
-    dataset.save(dataset_file)
+        for contrast_num, contrast in enumerate(zip(cond1_label,cond2_label)):
+
+#             # Z map
+#             z_data = deriv_mat[...,z_idx[contrast_num]]
+#             z_p_data = deriv_mat[...,z_p_idx[contrast_num]]
+#             z_p_data_range = (z_p_data - glm_vmin[1])/ (glm_vmax[1] - glm_vmin[1])
+#             z_p_data_range[z_p_data_range<0] = 0
+#             z_alpha = z_p_data_range
+#             param_z = {'data': z_data, 'cmap': cmap, 'alpha': z_alpha, 'vmin': glm_vmin[0],'vmax': glm_vmax[0],'cbar': 'discrete', 'cortex_type': cortex_type,
+#                        'description': 'z map: {} vs. {}'.format(contrast[0],contrast[1]), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
+#             exec('param_z_{}{} = param_z'.format(contrast[0],contrast[1]))
+#             maps_names.append('z_{}{}'.format(contrast[0],contrast[1]))
+
+            # FDR map
+            fdr_data = deriv_mat[...,fdr_idx[contrast_num]]
+            fdr_p_data = deriv_mat[...,fdr_p_idx[contrast_num]]
+            fdr_p_data_range = (fdr_p_data - glm_vmin[1])/ (glm_vmax[1] - glm_vmin[1])
+            fdr_p_data_range[fdr_p_data_range<0] = 0
+            fdr_alpha = fdr_p_data_range
+            param_fdr = {'data': fdr_data, 'cmap': cmap, 'alpha': fdr_alpha, 'vmin': glm_vmin[0],'vmax': glm_vmax[0],'cbar': 'discrete', 'cortex_type': cortex_type,
+                         'description': 'z map: {} vs. {}'.format(contrast[0],contrast[1]), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
+            exec('param_fdr_{}{} = param_fdr'.format(contrast[0],contrast[1]))
+            maps_names.append('fdr_{}{}'.format(contrast[0],contrast[1]))
+        
+        ## CV-R-square
+        cv_rsq_data = deriv_mat[...,cv_rsq_idx]
+        cv_rsq_data[cv_rsq_data==1]=0
+        cv_rsq_alpha = (cv_rsq_data - np.nanmin(cv_rsq_data))/ (np.nanmax(cv_rsq_data) - np.nanmin(cv_rsq_data))
+        param_cv_rsq = {'data': cv_rsq_data, 'cmap': cmap_uni, 'alpha': cv_rsq_alpha, 'vmin': cvrsq_val[0],'vmax': cvrsq_val[1],'cbar': 'discrete', 'cortex_type': cortex_type,
+                        'description': 'CV-R2 {}'.format(task), 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
+        maps_names.append('cv_rsq')
+
+        # Draw flatmaps
+        volumes = {}
+        for maps_name in maps_names:
+
+            # create flatmap
+            roi_name = '{}_{}_{}_{}_{}'.format(task, regist_type, preproc, data_type, maps_name)
+            roi_param = {'subject': subject2draw, 'xfmname': xfm_name, 'roi_name': roi_name}
+            print(roi_name)
+            exec('param_{}.update(roi_param)'.format(maps_name))
+            exec('volume_{maps_name} = draw_cortex_vertex(**param_{maps_name})'.format(maps_name=maps_name))
+            exec("plt.savefig('{}/{}_task-{}_space-{}_{}_{}_glm-{}.pdf')".format(flatmaps_dir, subject, task, regist_type, preproc, data_type, maps_name))
+            plt.close()
+            
+            # save flatmap as dataset
+            exec('vol_description = param_{}["description"]'.format(maps_name))
+            exec('volume = volume_{}'.format(maps_name))
+            volumes.update({vol_description:volume})
+        
+        
+
+        # save dataset
+        dataset_file = "{}/{}_task-{}_space-{}_{}_{}.hdf".format(datasets_dir, subject, task, regist_type, preproc, data_type)
+        dataset = cortex.Dataset(data = volumes)
+        dataset.save(dataset_file)
+        

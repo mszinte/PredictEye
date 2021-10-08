@@ -52,5 +52,6 @@
     "glm_noise_model": "ar1",
     "glm_alpha": 0.01,
     "glm_vmin":[-3.5, 0.01],
-    "glm_vmax":[3.5, 0]
+    "glm_vmax":[3.5, 0],
+    "cvr2_range":[0, 0.1]
 }

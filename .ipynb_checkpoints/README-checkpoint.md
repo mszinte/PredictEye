@@ -40,36 +40,26 @@ the ocumotor system.
 
 ## Post-processing
 
+### Data saving structure
+  20 Subjects (sub-01 to sub-02) 
+x 02 preprocessing steps (fmriprep_dct, fmriprep_dct_pca)
+x 10 contrasts (pRF, PurSacFix, SacFix, PurFix, SacExoSacEndo, SacExoFix, SacEndoFix, PurExoPurEndo, PurExoFix, PurEndoFix)
+x 02 registration types (T1w, fs-170k)
+x 02 averaging methods (avg: fit across averaged runs; avg-loo: average of fit of leave-one-out average runs)
+
 ### pRF
-  1. run the prf fit with _prf/fit/run_prf_fit.sh_
-  2. compute pRF parameters and leave-one-out cross-validated r2 with _prf/post_fit/run_post_fit.sh_
-  3. make pycortex maps using with _prf/post_fit/run_prf_maps.sh_
-  4. draw ROIs using on overlays using Inkscape
-  5. create hdf files per roi using _post_fit/roi_to_hdf5.py_
-  6. create pandas files per roi using _post_fit/hdf5_to_pandas.py_
-
-### pMF/PurLoc/SacLoc/SacVELoc/PurVELoc
-  1. compute motor design with _glm/fit/pmf_design.py_ 
-  2. run the prf fit with _glm/fit/submit_fit.py_
-  3. combine fits and compute pRF parameters with _glm/post_fit/post_fit.py_
-  4. make pycortex maps using _post_fit/pycortex_maps.py_
-  5. adjust ROIs using on overlays using Inkscape
-  6. create hdf files per roi using _post_fit/roi_to_hdf5.py_
-  7. create pandas files per roi using _post_fit/hdf5_to_pandas.py_
-
-## Behaviral_analysis
-  1. RSexp:
-  2. pRFexp:
-  3. pMFexp:
-  4. locEMexp:
-  5. locVisEndEMexp:
+  0. run the prf fit with _prf/fit/run_prf_fit.sh_
+  1. compute pRF parameters and leave-one-out cross-validated r2 with _prf/post_fit/run_post_fit.sh_
+  2. make pycortex maps using with _prf/post_fit/run_pycortex_maps.sh_ 
+  3. draw ROIs using on overlays using Inkscape
+  4. create hdf files per roi using _post_fit/roi_to_hdf5.py_
+  5. create pandas files per roi using _post_fit/hdf5_to_pandas.py_
 
 ### GLMs
   0. compute glm design with _glm/fit/gen_glm_design.py_
-  1. run the prf fit with _fit/run_prf_fit.sh_ 
-  2. compute pRF parameters and leave-one-out cross-validated r2 with _post_fit/run_post_fit.sh_
-  3. make pycortex maps using with _post_fit/run_prf_maps.sh_
-  
+  1. run the glm with _glm/fit/run_glm_fit.sh_ 
+  2. compute leave-one-out cross-validated r2 with _glm/post_fit/run_post_fit.sh_
+  3. make pycortex maps using with _gl,/post_fit/run_pycortex_maps.sh_ 
   1. Compute GLM for each tasks with _glm/fit_glm.py_ or with _glm/run_glm.sh_
   2. Plot and save flatmaps with _glm/pycortex_glm.py_ or with _glm/run_glm_maps.sh_
 
@@ -77,3 +67,4 @@ the ocumotor system.
   1. Combine PRF and GLM analysis in single webgl per subject using _webgl/pycortex_webgl.py_ or _webgl/run_webgl.sh_
   2. send index.py to webapp using _webgl/send_index.sh_
   
+### Behaviral_analysis

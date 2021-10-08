@@ -85,6 +85,7 @@ with open('settings.json') as f:
 # -------------
 xfm_name = analysis_info["xfm_name"]
 base_dir = analysis_info["base_dir_local"]
+cvrsq_val = analysis_info["cvr2_range"]
 deriv_dir = "{}/pp_data_new/{}/prf/fit".format(base_dir,subject)
 
 # Set pycortex db and colormaps
@@ -103,9 +104,13 @@ cmap_steps = 255
 print('save flatmaps')
 maps_names = []
 flatmaps_dir = '{}/pp_data_new/{}/prf/pycortex/flatmaps'.format(base_dir, subject)
+datasets_dir = '{}/pp_data_new/{}/prf/pycortex/datasets'.format(base_dir, subject)
 
-try: os.makedirs(flatmaps_dir)
+try: os.makedirs(flatmaps_dir); 
 except: pass
+try: os.makedirs(datasets_dir)
+except: pass
+
 
 data_types = ['avg','avg-loo']
 for data_type in data_types:
@@ -125,7 +130,9 @@ for data_type in data_types:
     
     # CV-R-square
     cv_rsq_data = deriv_mat[...,cv_rsq_idx]
-    param_cv_rsq = {'data': rsq_data, 'cmap': cmap_uni, 'alpha': cv_rsq_data, 'vmin': 0,'vmax': 1,'cbar': 'discrete', 'cortex_type': cortex_type,
+    cv_rsq_data[cv_rsq_data==1]=0
+    cv_rsq_alpha = (cv_rsq_data - np.nanmin(cv_rsq_data))/ (np.nanmax(cv_rsq_data) - np.nanmin(cv_rsq_data))
+    param_cv_rsq = {'data': cv_rsq_data, 'cmap': cmap_uni, 'alpha': cv_rsq_alpha, 'vmin': cvrsq_val[0],'vmax': cvrsq_val[1],'cbar': 'discrete', 'cortex_type': cortex_type,
                  'description': 'pRF cv-rsquare', 'curv_brightness': 1, 'curv_contrast': 0.1, 'add_roi': False}
     maps_names.append('cv_rsq')
 
@@ -163,12 +170,12 @@ for data_type in data_types:
     for maps_name in maps_names:
 
         # create flatmap
-        roi_name = '{}_pRF_{}_{}_{}'.format(maps_name, regist_type, preproc, data_type)
+        roi_name = 'pRF_{}_{}_{}_{}'.format(regist_type, preproc, data_type, maps_name)
         roi_param = {'subject': subject2draw, 'xfmname': xfm_name, 'roi_name': roi_name}
         print(roi_name)
         exec('param_{}.update(roi_param)'.format(maps_name))
         exec('volume_{maps_name} = draw_cortex_vertex(**param_{maps_name})'.format(maps_name=maps_name))
-        exec("plt.savefig('{}/{}_space-{}_{}_{}_prf-{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, data_type, maps_name))
+        exec("plt.savefig('{}/{}_task-pRF_space-{}_{}_{}_{}.pdf')".format(flatmaps_dir, subject, regist_type, preproc, data_type, maps_name))
         plt.close()
 
         # save flatmap as dataset
@@ -177,6 +184,6 @@ for data_type in data_types:
         volumes.update({vol_description:volume})
         
     # save dataset
-    dataset_file = "{}/{}_space-{}_{}_{}_prf-deriv.hdf".format(flatmaps_dir, subject, regist_type, preproc, data_type)
+    dataset_file = "{}/{}_task-pRF_space-{}_{}_{}.hdf".format(datasets_dir, subject, regist_type, preproc, data_type)
     dataset = cortex.Dataset(data = volumes)
     dataset.save(dataset_file)

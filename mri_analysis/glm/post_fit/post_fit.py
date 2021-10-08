@@ -126,7 +126,6 @@ for task in glm_tasks:
             test_img = nb.load(test_fn)
             test_mat = test_img.get_fdata()
             num_elmt = test_mat.shape[0]*test_mat.shape[1]*test_mat.shape[2]
-
         
         # Compute leave-one-out cross-validated r2
         flat_test_mat = test_mat.reshape((num_elmt,test_mat.shape[-1]))
@@ -137,13 +136,13 @@ for task in glm_tasks:
         r2_mat = np.power(r2_mat,2)
 
         if np.ndim(fit_mat) == 4:
-            deriv_mat = np.zeros((fit_mat.shape[0],fit_mat.shape[1],fit_mat.shape[2],5))*np.nan
+            deriv_mat = np.zeros((fit_mat.shape[0],fit_mat.shape[1],fit_mat.shape[2],fit_mat.shape[-1]+1))*np.nan
         elif np.ndim(fit_mat) == 2:
-            deriv_mat = np.zeros((fit_mat.shape[0],5))*np.nan
-        
-        deriv_mat[...,4] = r2_mat.reshape(deriv_mat.shape[:-1])
-        
+            deriv_mat = np.zeros((fit_mat.shape[0],fit_mat.shape[-1]+1))*np.nan
 
+        deriv_mat[...,0:fit_mat.shape[-1]] = fit_mat
+        deriv_mat[...,fit_mat.shape[-1]] = r2_mat.reshape(deriv_mat.shape[:-1])
+        
         # save data
         if regist_type == 'fsLR_den-170k':
             np.save(deriv_fn, deriv_mat)
